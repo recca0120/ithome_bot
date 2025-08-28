@@ -37,8 +37,9 @@ async def test_user_can_login_to_ithome():
         current_url = automation.page.url
         print(f"登入完成後的頁面: {current_url}")
         
-        # 驗證是否在使用者主頁
-        assert "ithelp.ithome.com.tw/users" in current_url, f"應該要在使用者主頁，但目前在 {current_url}"
+        # 驗證最終網址是否正確
+        expected_url = "https://ithelp.ithome.com.tw/users/20065818"
+        assert current_url == expected_url, f"應該要在 {expected_url}，但目前在 {current_url}"
         
     finally:
         # Cleanup

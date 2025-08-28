@@ -4,6 +4,7 @@ iThome 鐵人賽登入自動化
 """
 from playwright.async_api import async_playwright, Browser, Page, Playwright
 from .login import Login
+from .navigation import Navigation
 
 
 class IThomeAutomation:
@@ -46,28 +47,9 @@ class IThomeAutomation:
         login_success = await login_handler.login(account, password)
         
         if login_success:
-            # 登入成功後導航到 ithelp.ithome.com.tw
-            await self.page.goto("https://ithelp.ithome.com.tw/")
-            print(f"已導航到 ithelp.ithome.com.tw")
-
-            # 點擊登入/註冊按鈕
-            login_register_button = self.page.locator('text=登入/註冊')
-            await login_register_button.click()
-            print(f"已點擊登入/註冊按鈕")
-            
-            # 等待頁面載入
-            await self.page.wait_for_load_state("domcontentloaded")
-            
-            # 點擊 #dLabel (使用者下拉選單) - 選擇 a 標籤的那個
-            dlabel_button = self.page.locator('a#dLabel')
-            await dlabel_button.click()
-            print(f"已點擊使用者下拉選單")
-            
-            # 點擊「我的主頁」
-            my_page_link = self.page.locator('text=我的主頁')
-            await my_page_link.click()
-            print(f"已點擊我的主頁")
-
+            # 使用 Navigation class 導航到使用者主頁
+            navigation = Navigation(self.page)
+            await navigation.navigate_to_user_profile()
             return True
         return False
 
