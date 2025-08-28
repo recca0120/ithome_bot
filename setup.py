@@ -13,12 +13,12 @@ if os.path.exists("README.md"):
 setup(
     name="ithome-bot",
     version="0.1.0",
-    author="Your Name",
-    author_email="your.email@example.com",
+    author="recca0120",
+    author_email="recca0120@gmail.com",
     description="iThome 鐵人賽文章更新自動化工具",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/ithome-bot",
+    url="https://github.com/recca0120/ithome_bot",
     packages=["ithome_bot"],
     classifiers=[
         "Programming Language :: Python :: 3",
