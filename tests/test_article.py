@@ -2,6 +2,7 @@
 測試文章編輯功能
 """
 import pytest
+from src.utils import base_path
 
 
 
@@ -10,7 +11,8 @@ async def test_update_article(automation):
     """測試更新文章"""
     
     # 讀取文章內容
-    with open("day01-python-environment-setup.md", 'r', encoding='utf-8') as f:
+    content_file = base_path() / "tests/fixtures/day01-python-environment-setup.md"
+    with open(content_file, 'r', encoding='utf-8') as f:
         content = f.read()
     
     # 設定文章資料
