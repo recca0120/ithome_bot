@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from playwright.async_api import async_playwright
-from ithome_bot.bot import Bot
+from ithome_bot.client import Client
 
 # 載入環境變數
 load_dotenv()
@@ -49,19 +49,19 @@ async def page():
 
 
 @pytest_asyncio.fixture
-async def bot(page, credential):
-    """建立並初始化 Bot 實例，並執行登入"""
-    # 建立 Bot 實例，指定 cookies 檔案位置在專案根目錄
+async def client(page, credential):
+    """建立並初始化 Client 實例，並執行登入"""
+    # 建立 Client 實例，指定 cookies 檔案位置在專案根目錄
     cookies_file = base_path() / "cookies.txt"
-    bot = Bot(page, cookies_file=str(cookies_file))
+    client = Client(page, cookies_file=str(cookies_file))
     
     # 載入 cookies
-    await bot.load_cookies()
+    await client.load_cookies()
 
     # 執行登入
-    await bot.login(credential["account"], credential["password"])
+    await client.login(credential["account"], credential["password"])
 
     # 儲存 cookies
-    await bot.save_cookies()
+    await client.save_cookies()
 
-    yield bot
+    yield client

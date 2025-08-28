@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 @pytest.mark.asyncio
-async def test_update_article(bot):
+async def test_update_article(client):
     """測試更新文章"""
 
     # 讀取文章內容
@@ -23,7 +23,7 @@ async def test_update_article(bot):
     }
 
     # Act - 更新文章內容
-    result = await bot.update_article(article_data)
+    result = await client.update_article(article_data)
 
     # Assert - 驗證更新結果
     assert result is True, "文章更新應該成功"

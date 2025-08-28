@@ -4,8 +4,8 @@ iThome 登入功能
 from playwright.async_api import Page
 
 
-class Login:
-    """登入功能類別"""
+class Authenticator:
+    """認證器類別"""
 
     def __init__(self, page: Page):
         """

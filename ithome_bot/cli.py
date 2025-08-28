@@ -12,9 +12,9 @@ import click
 from playwright.async_api import async_playwright
 
 # 從同一個 package 載入模組
-from .bot import Bot
-from .login import Login
-from .article import Article
+from .client import Client
+from .authenticator import Authenticator
+from .article_updater import ArticleUpdater
 
 
 async def update_article_with_bot(
@@ -25,7 +25,7 @@ async def update_article_with_bot(
     password: Optional[str] = None
 ) -> bool:
     """
-    使用 Bot 更新文章的核心函數
+    使用 Client 更新文章的核心函數
     
     Args:
         article_id: 文章 ID
@@ -65,23 +65,23 @@ async def update_article_with_bot(
     page = await browser.new_page()
     
     try:
-        # 建立 Bot 實例
-        bot = Bot(page)
+        # 建立 Client 實例
+        client = Client(page)
         
         # 載入 cookies
         click.echo("🔑 載入 cookies...")
-        await bot.load_cookies()
+        await client.load_cookies()
         
         # 執行登入
         click.echo("🔐 執行登入...")
-        if not await bot.login(account, password):
+        if not await client.login(account, password):
             click.echo("❌ 登入失敗")
             return False
         click.echo("✅ 登入成功")
         
         # 儲存 cookies
         click.echo("💾 儲存 cookies...")
-        await bot.save_cookies()
+        await client.save_cookies()
         click.echo("✅ Cookies 已儲存")
         
         # 更新文章
@@ -92,7 +92,7 @@ async def update_article_with_bot(
             "description": description
         }
         
-        success = await bot.update_article(article_data)
+        success = await client.update_article(article_data)
         
         if success:
             click.echo("✅ 文章更新成功!")

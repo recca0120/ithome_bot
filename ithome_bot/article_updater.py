@@ -7,8 +7,8 @@ from playwright.async_api import Page
 from .recaptcha import ReCaptcha
 
 
-class Article:
-    """文章管理器"""
+class ArticleUpdater:
+    """文章更新器"""
 
     def __init__(self, page: Page):
         """
@@ -22,7 +22,7 @@ class Article:
         self.subject_input = page.locator('input[name="subject"]')
         self.update_button = page.locator('#updateSubmitBtn')
 
-    async def update_article(self, article_data: dict) -> bool:
+    async def update(self, article_data: dict) -> bool:
         """
         更新文章內容
 

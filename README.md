@@ -82,7 +82,7 @@ ithome-bot 10376177 "Day 01 標題" day01.md --account myaccount --password mypa
 ```python
 import asyncio
 from playwright.async_api import async_playwright
-from ithome_bot import Bot
+from ithome_bot import Client
 
 async def update_my_article():
     # 啟動瀏覽器
@@ -91,11 +91,11 @@ async def update_my_article():
     page = await browser.new_page()
     
     try:
-        # 建立 Bot 實例
-        bot = Bot(page)
+        # 建立 Client 實例
+        client = Client(page)
         
         # 登入
-        await bot.login("account", "password")
+        await client.login("account", "password")
         
         # 更新文章
         article_data = {
@@ -103,7 +103,7 @@ async def update_my_article():
             "subject": "文章標題",
             "description": "文章內容..."
         }
-        success = await bot.update_article(article_data)
+        success = await client.update_article(article_data)
         
     finally:
         await browser.close()
@@ -117,9 +117,9 @@ asyncio.run(update_my_article())
 
 如果不想安裝 package，可以直接複製以下檔案到你的專案：
 
-1. 複製整個 `src/` 目錄到你的專案
+1. 複製整個 `ithome_bot/` 目錄到你的專案
 2. 安裝相依套件：`pip install playwright python-dotenv click`
-3. 使用 `python -m src.cli` 執行
+3. 使用 `python -m ithome_bot.cli` 執行
 
 ## 系統需求
 

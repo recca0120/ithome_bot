@@ -8,12 +8,12 @@ from pathlib import Path
 
 from playwright.async_api import Page
 
-from .login import Login
-from .article import Article
+from .authenticator import Authenticator
+from .article_updater import ArticleUpdater
 
 
-class Bot:
-    """Bot 操作類別"""
+class Client:
+    """客戶端操作類別"""
 
     def __init__(self, page: Page, cookies_file: str = "cookies.txt"):
         """
@@ -37,9 +37,9 @@ class Bot:
         Returns:
             bool: 登入是否成功
         """
-        # 使用 Login class 執行登入
-        login = Login(self.page)
-        login_success = await login.login(account, password)
+        # 使用 Authenticator class 執行登入
+        auth = Authenticator(self.page)
+        login_success = await auth.login(account, password)
 
         return login_success
 
@@ -56,9 +56,9 @@ class Bot:
         Returns:
             bool: 是否更新成功
         """
-        # 使用 Article class 處理文章更新
-        article = Article(self.page)
-        return await article.update_article(article_data)
+        # 使用 ArticleUpdater class 處理文章更新
+        updater = ArticleUpdater(self.page)
+        return await updater.update(article_data)
 
     async def save_cookies(self) -> None:
         """
