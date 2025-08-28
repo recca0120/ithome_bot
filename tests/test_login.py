@@ -10,24 +10,28 @@ from src.ithome_automation import IThomeAutomation
 load_dotenv()
 
 
+@pytest.fixture
+def test_config():
+    """從環境變數取得測試設定"""
+    return {
+        "account": os.getenv("ITHOME_ACCOUNT"),
+        "password": os.getenv("ITHOME_PASSWORD"),
+        "headless": os.getenv("HEADLESS", "false").lower() == "true"
+    }
+
+
 @pytest.mark.asyncio
-async def test_user_can_login_to_ithome():
+async def test_user_can_login_to_ithome(test_config):
     """測試使用者可以登入到 iThome"""
-    # Arrange - 從環境變數取得帳號密碼和設定
-    account = os.getenv("ITHOME_ACCOUNT")
-    password = os.getenv("ITHOME_PASSWORD")
     
-    # 從環境變數決定是否使用 headless 模式
-    headless = os.getenv("HEADLESS", "false").lower() == "true"
-    
-    automation = IThomeAutomation(headless=headless)
+    automation = IThomeAutomation(headless=test_config["headless"])
     
     try:
         # 初始化瀏覽器
         await automation.initialize()
         
         # Act - 執行登入
-        login_success = await automation.login(account, password)
+        login_success = await automation.login(test_config["account"], test_config["password"])
         
         # Assert - 驗證登入成功
         assert login_success is True, "登入應該要成功"
