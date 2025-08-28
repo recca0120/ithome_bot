@@ -16,6 +16,42 @@ from src.ithome_automation import IThomeAutomation
 load_dotenv()
 
 
+async def perform_login(automation: IThomeAutomation) -> bool:
+    """
+    執行登入流程
+    
+    Args:
+        automation: IThomeAutomation 實例
+        
+    Returns:
+        bool: 登入是否成功
+    """
+    click.echo("🔑 載入 cookies...")
+    await automation.load_cookies()
+    
+    # 從環境變數讀取帳密
+    account = os.getenv('ITHOME_ACCOUNT')
+    password = os.getenv('ITHOME_PASSWORD')
+    
+    if not account or not password:
+        click.echo("❌ 錯誤: 請設定環境變數 ITHOME_ACCOUNT 和 ITHOME_PASSWORD")
+        return False
+    
+    # 執行登入（會自動檢查 cookies 並導航到使用者主頁）
+    click.echo("🔐 執行登入...")
+    if await automation.login(account, password):
+        click.echo("✅ 登入成功")
+        
+        # 儲存 cookies
+        click.echo("💾 儲存 cookies...")
+        await automation.save_cookies()
+        click.echo("✅ Cookies 已儲存")
+        return True
+    else:
+        click.echo("❌ 登入失敗")
+        return False
+
+
 async def update_article_cli(article_id: str, subject: str, description_file: str) -> None:
     """
     透過 CLI 更新文章
@@ -47,28 +83,8 @@ async def update_article_cli(article_id: str, subject: str, description_file: st
         click.echo("🚀 正在初始化瀏覽器...")
         await automation.initialize()
         
-        click.echo("🔑 載入 cookies...")
-        await automation.load_cookies()
-        
-        # 從環境變數讀取帳密
-        account = os.getenv('ITHOME_ACCOUNT')
-        password = os.getenv('ITHOME_PASSWORD')
-        
-        if not account or not password:
-            click.echo("❌ 錯誤: 請設定環境變數 ITHOME_ACCOUNT 和 ITHOME_PASSWORD")
-            sys.exit(1)
-        
-        # 執行登入（會自動檢查 cookies 並導航到使用者主頁）
-        click.echo("🔐 執行登入...")
-        if await automation.login(account, password):
-            click.echo("✅ 登入成功")
-            
-            # 儲存 cookies
-            click.echo("💾 儲存 cookies...")
-            await automation.save_cookies()
-            click.echo("✅ Cookies 已儲存")
-        else:
-            click.echo("❌ 登入失敗")
+        # 執行登入
+        if not await perform_login(automation):
             sys.exit(1)
         
         click.echo("🔄 更新文章中...")
