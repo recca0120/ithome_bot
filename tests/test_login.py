@@ -1,0 +1,42 @@
+"""
+TDD: 測試 IThomeAutomation 的 login 功能
+"""
+import pytest
+import os
+from dotenv import load_dotenv
+from src.ithome_automation import IThomeAutomation
+
+# 載入環境變數
+load_dotenv()
+
+
+@pytest.mark.asyncio
+async def test_user_can_login_to_ithome():
+    """測試使用者可以登入到 iThome"""
+    # Arrange - 從環境變數取得帳號密碼和設定
+    account = os.getenv("ITHOME_ACCOUNT")
+    password = os.getenv("ITHOME_PASSWORD")
+    
+    # 從環境變數決定是否使用 headless 模式
+    headless = os.getenv("HEADLESS", "false").lower() == "true"
+    
+    automation = IThomeAutomation(headless=headless)
+    
+    try:
+        # Act - 執行登入
+        login_success = await automation.login(account, password)
+        
+        # Assert - 驗證登入成功
+        assert login_success is True, "登入應該要成功"
+        assert automation.page is not None
+        assert automation.browser is not None
+        
+        # 驗證已導航到 ithelp.ithome.com.tw
+        # 登入/註冊按鈕點擊後可能會有頁面跳轉
+        await automation.page.wait_for_load_state("domcontentloaded")
+        current_url = automation.page.url
+        print(f"登入完成後的頁面: {current_url}")
+        
+    finally:
+        # Cleanup
+        await automation.close()
