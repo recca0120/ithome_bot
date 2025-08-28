@@ -7,7 +7,7 @@ from pathlib import Path
 def base_path() -> Path:
     """
     取得專案根目錄路徑
-    
+
     Returns:
         Path: 專案根目錄路徑
     """

@@ -5,7 +5,8 @@ import pytest
 import pytest_asyncio
 import os
 from dotenv import load_dotenv
-from src.ithome_automation import IThomeAutomation
+from playwright.async_api import async_playwright
+from src.bot import Bot
 
 # 載入環境變數
 load_dotenv()
@@ -21,21 +22,33 @@ def credential():
 
 
 @pytest_asyncio.fixture
-async def automation(credential):
-    """建立並初始化 IThomeAutomation 實例，並執行登入"""
-    automation = IThomeAutomation()
-    await automation.initialize()
+async def page():
+    """建立並初始化 Playwright Page"""
+    # 啟動 Playwright 和瀏覽器
+    playwright = await async_playwright().start()
+    browser = await playwright.webkit.launch(headless=False)
+    page = await browser.new_page()
     
-    # 載入 cookies
-    await automation.load_cookies()
-    
-    # 執行登入
-    await automation.login(credential["account"], credential["password"])
-    
-    # 儲存 cookies
-    await automation.save_cookies()
-    
-    yield automation
+    yield page
     
     # 清理
-    await automation.close()
+    await browser.close()
+    await playwright.stop()
+
+
+@pytest_asyncio.fixture
+async def bot(page, credential):
+    """建立並初始化 Bot 實例，並執行登入"""
+    # 建立 Bot 實例
+    bot = Bot(page)
+    
+    # 載入 cookies
+    await bot.load_cookies()
+
+    # 執行登入
+    await bot.login(credential["account"], credential["password"])
+
+    # 儲存 cookies
+    await bot.save_cookies()
+
+    yield bot
