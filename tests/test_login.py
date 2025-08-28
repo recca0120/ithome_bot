@@ -2,22 +2,7 @@
 TDD: 測試 IThomeAutomation 的 login 功能
 """
 import pytest
-import os
-from dotenv import load_dotenv
 from src.ithome_automation import IThomeAutomation
-
-# 載入環境變數
-load_dotenv()
-
-
-@pytest.fixture
-def test_config():
-    """從環境變數取得測試設定"""
-    return {
-        "account": os.getenv("ITHOME_ACCOUNT"),
-        "password": os.getenv("ITHOME_PASSWORD"),
-        "headless": os.getenv("HEADLESS", "false").lower() == "true"
-    }
 
 
 @pytest.mark.asyncio
@@ -49,33 +34,3 @@ async def test_user_can_login_to_ithome(test_config):
         # Cleanup
         await automation.close()
 
-
-@pytest.mark.asyncio
-async def test_navigate_to_user_profile_with_cookies(test_config):
-    """測試使用 cookies 導航到使用者主頁"""
-    
-    automation = IThomeAutomation(headless=test_config["headless"])
-    
-    try:
-        # 初始化瀏覽器
-        await automation.initialize()
-        
-        # 載入 cookies
-        cookies_loaded = await automation.load_cookies()
-        assert cookies_loaded is True, "應該要成功載入 cookies"
-        
-        # Act - 導航到使用者主頁
-        await automation.goto_user_profile()
-        
-        # Assert - 驗證已導航到我的主頁
-        await automation.page.wait_for_load_state("domcontentloaded")
-        current_url = automation.page.url
-        print(f"導航完成後的頁面: {current_url}")
-        
-        # 驗證最終網址是否正確
-        expected_url = "https://ithelp.ithome.com.tw/users/20065818"
-        assert current_url == expected_url, f"應該要在 {expected_url}，但目前在 {current_url}"
-        
-    finally:
-        # Cleanup
-        await automation.close()
