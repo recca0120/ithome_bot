@@ -51,8 +51,9 @@ async def page():
 @pytest_asyncio.fixture
 async def bot(page, credential):
     """建立並初始化 Bot 實例，並執行登入"""
-    # 建立 Bot 實例
-    bot = Bot(page)
+    # 建立 Bot 實例，指定 cookies 檔案位置在專案根目錄
+    cookies_file = base_path() / "cookies.txt"
+    bot = Bot(page, cookies_file=str(cookies_file))
     
     # 載入 cookies
     await bot.load_cookies()
