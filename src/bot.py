@@ -48,21 +48,22 @@ class Bot:
 
         return login_success
 
-    async def update_article(self, article_id: str, subject: str, description: str) -> bool:
+    async def update_article(self, article_data: dict) -> bool:
         """
         更新文章內容
 
         Args:
-            article_id: 文章 ID
-            subject: 文章標題
-            description: 文章內容
+            article_data: 文章資料字典，包含:
+                - article_id: 文章 ID
+                - subject: 文章標題
+                - description: 文章內容
 
         Returns:
             bool: 是否更新成功
         """
         # 使用 Article class 處理文章更新
         article = Article(self.page)
-        return await article.update_article(article_id, subject, description)
+        return await article.update_article(article_data)
 
     async def save_cookies(self) -> None:
         """

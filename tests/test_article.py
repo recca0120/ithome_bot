@@ -16,11 +16,14 @@ async def test_update_article(bot):
         content = f.read()
 
     # 設定文章資料
-    article_id = "10376177"
-    subject = "[Day 01] Python pytest TDD 實戰：從零開始的測試驅動開發 - 環境設置與第一個測試"
+    article_data = {
+        "article_id": "10376177",
+        "subject": "[Day 01] Python pytest TDD 實戰：從零開始的測試驅動開發 - 環境設置與第一個測試",
+        "description": content
+    }
 
     # Act - 更新文章內容
-    result = await bot.update_article(article_id, subject, content)
+    result = await bot.update_article(article_data)
 
     # Assert - 驗證更新結果
     assert result is True, "文章更新應該成功"

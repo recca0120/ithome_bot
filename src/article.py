@@ -22,18 +22,24 @@ class Article:
         self.subject_input = page.locator('input[name="subject"]')
         self.update_button = page.locator('#updateSubmitBtn')
 
-    async def update_article(self, article_id: str, subject: str, description: str) -> bool:
+    async def update_article(self, article_data: dict) -> bool:
         """
         更新文章內容
 
         Args:
-            article_id: 文章 ID
-            subject: 文章標題
-            description: 文章內容
+            article_data: 文章資料字典，包含:
+                - article_id: 文章 ID
+                - subject: 文章標題
+                - description: 文章內容
 
         Returns:
             bool: 是否更新成功
         """
+        # 從字典中取出參數
+        article_id = article_data['article_id']
+        subject = article_data['subject']
+        description = article_data['description']
+        
         # 導航到編輯頁面
         await self._navigate_to_edit_page(article_id)
 

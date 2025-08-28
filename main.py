@@ -93,7 +93,12 @@ async def update_article_cli(article_id: str, subject: str, description_file: st
             sys.exit(1)
 
         click.echo("🔄 更新文章中...")
-        success = await bot.update_article(article_id, subject, description)
+        article_data = {
+            "article_id": article_id,
+            "subject": subject,
+            "description": description
+        }
+        success = await bot.update_article(article_data)
 
         if success:
             click.echo("✅ 文章更新成功!")
