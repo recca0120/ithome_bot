@@ -19,8 +19,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/yourusername/ithome-bot",
-    packages=["src"],
-    package_dir={"ithome_bot": "src"},
+    packages=["ithome_bot"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -34,7 +33,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "ithome-bot=src.cli:main",
+            "ithome-bot=ithome_bot.cli:main",
         ],
     },
 )

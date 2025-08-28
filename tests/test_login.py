@@ -2,7 +2,7 @@
 TDD: 測試 Bot 的 login 功能
 """
 import pytest
-from src.bot import Bot
+from ithome_bot.bot import Bot
 
 
 @pytest.mark.asyncio

@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from playwright.async_api import async_playwright
-from src.bot import Bot
+from ithome_bot.bot import Bot
 
 # 載入環境變數
 load_dotenv()

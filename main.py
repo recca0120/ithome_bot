@@ -2,7 +2,7 @@
 """
 主程式 - 直接呼叫 CLI
 """
-from src.cli import main
+from ithome_bot.cli import main
 
 if __name__ == "__main__":
     main()
