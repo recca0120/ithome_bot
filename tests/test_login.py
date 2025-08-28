@@ -38,14 +38,39 @@ async def test_user_can_login_to_ithome(test_config):
         assert automation.page is not None
         assert automation.browser is not None
         
-        # 導航到使用者主頁
+        # 驗證登入後的 URL
+        current_url = automation.page.url
+        assert "member.ithome.com.tw/profile/account" in current_url, f"登入後應該在個人檔案頁面，但目前在 {current_url}"
+        
+        # 儲存 cookies 供後續測試使用
+        await automation.save_cookies()
+        
+    finally:
+        # Cleanup
+        await automation.close()
+
+
+@pytest.mark.asyncio
+async def test_navigate_to_user_profile_with_cookies(test_config):
+    """測試使用 cookies 導航到使用者主頁"""
+    
+    automation = IThomeAutomation(headless=test_config["headless"])
+    
+    try:
+        # 初始化瀏覽器
+        await automation.initialize()
+        
+        # 載入 cookies
+        cookies_loaded = await automation.load_cookies()
+        assert cookies_loaded is True, "應該要成功載入 cookies"
+        
+        # Act - 導航到使用者主頁
         await automation.goto_user_profile()
         
-        # 驗證已導航到我的主頁
-        # 點擊我的主頁後應該會跳轉到使用者頁面
+        # Assert - 驗證已導航到我的主頁
         await automation.page.wait_for_load_state("domcontentloaded")
         current_url = automation.page.url
-        print(f"登入完成後的頁面: {current_url}")
+        print(f"導航完成後的頁面: {current_url}")
         
         # 驗證最終網址是否正確
         expected_url = "https://ithelp.ithome.com.tw/users/20065818"

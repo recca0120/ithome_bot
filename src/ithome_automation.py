@@ -73,9 +73,6 @@ class IThomeAutomation:
         await profile.ithelp_login()
         # 導航到使用者主頁
         await profile.navigate_to_user_profile()
-        
-        # 成功後儲存 cookies
-        await self.save_cookies()
     
     async def save_cookies(self) -> None:
         """
