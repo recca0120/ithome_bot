@@ -21,6 +21,15 @@ class Navigation:
         self.user_dropdown = page.locator('a#dLabel')
         self.my_page_link = page.locator('text=我的主頁')
 
+    async def goto_ithelp(self) -> None:
+        """
+        導航到 ithelp.ithome.com.tw
+        """
+        await self.page.goto("https://ithelp.ithome.com.tw/")
+        print(f"已導航到 ithelp.ithome.com.tw")
+        # 等待頁面載入
+        await self.page.wait_for_load_state("domcontentloaded")
+    
     async def ithelp_login(self) -> None:
         """
         登入到 ithelp.ithome.com.tw
@@ -30,8 +39,7 @@ class Navigation:
         2. 點擊登入/註冊按鈕
         """
         # 導航到 ithelp.ithome.com.tw
-        await self.page.goto("https://ithelp.ithome.com.tw/")
-        print(f"已導航到 ithelp.ithome.com.tw")
+        await self.goto_ithelp()
 
         # 點擊登入/註冊按鈕
         await self.login_register_button.click()
@@ -45,11 +53,13 @@ class Navigation:
         導航到使用者主頁
         
         執行流程：
-        1. 點擊使用者下拉選單
-        2. 點擊我的主頁
-        
-        注意：需要先執行 ithelp_login() 方法
+        1. 導航到 ithelp.ithome.com.tw
+        2. 點擊使用者下拉選單
+        3. 點擊我的主頁
         """
+        # 導航到 ithelp.ithome.com.tw
+        await self.goto_ithelp()
+        
         # 點擊使用者下拉選單
         await self.user_dropdown.click()
         print(f"已點擊使用者下拉選單")
