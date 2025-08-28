@@ -64,15 +64,15 @@ class ArticleUpdater:
         # 準備更新文章標題...
 
         # 模擬人類行為：隨機延遲
-        await self.page.wait_for_timeout(random.randint(500, 1500))
+        # await self.page.wait_for_timeout(random.randint(500, 1500))
 
         await self.subject_input.wait_for(state="visible", timeout=5000)
 
         # 模擬人類輸入：先清空再輸入
         await self.subject_input.focus()
-        await self.page.wait_for_timeout(random.randint(100, 300))
+        # await self.page.wait_for_timeout(random.randint(100, 300))
         await self.subject_input.fill("")
-        await self.page.wait_for_timeout(random.randint(200, 500))
+        # await self.page.wait_for_timeout(random.randint(200, 500))
         await self.subject_input.fill(subject)
 
         # 已更新文章標題: {subject}
@@ -82,7 +82,7 @@ class ArticleUpdater:
         # 準備更新文章內容...
 
         # 模擬人類行為：在標題和內容之間的延遲
-        await self.page.wait_for_timeout(random.randint(800, 2000))
+        # await self.page.wait_for_timeout(random.randint(800, 2000))
 
         # SimpleMDE 編輯器需要特殊處理
         await self.page.evaluate("""
