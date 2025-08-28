@@ -234,3 +234,4 @@ pytest -v -s
 
 ## 授權
 MIT License
+- 不自動執行測試
