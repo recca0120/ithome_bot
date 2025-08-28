@@ -53,13 +53,9 @@ class Navigation:
         導航到使用者主頁
         
         執行流程：
-        1. 導航到 ithelp.ithome.com.tw
-        2. 點擊使用者下拉選單
-        3. 點擊我的主頁
+        1. 點擊使用者下拉選單
+        2. 點擊我的主頁
         """
-        # 導航到 ithelp.ithome.com.tw
-        await self.goto_ithelp()
-        
         # 點擊使用者下拉選單
         await self.user_dropdown.click()
         print(f"已點擊使用者下拉選單")
