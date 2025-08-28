@@ -12,7 +12,6 @@ from pathlib import Path
 from playwright.async_api import async_playwright, Browser, Page, Playwright
 
 from .login import Login
-from .profile import Profile
 from .article import Article
 from .utils import base_path
 
@@ -64,25 +63,10 @@ class IThomeAutomation:
             await self.initialize()
 
         # 使用 Login class 執行登入
-        login_handler = Login(self.page)
-        return await login_handler.login(account, password)
-
-    async def goto_user_profile(self) -> None:
-        """
-        導航到使用者主頁
-        需要先執行 login() 成功後才能呼叫
-        """
-        if not self.page:
-            raise RuntimeError("尚未登入，請先執行 login() 方法")
-
-        # 使用 Profile class 
-        profile = Profile(self.page)
-        # 導航到 ithelp
-        await profile.goto_ithelp()
-        # 執行 ithelp 登入
-        await profile.ithelp_login()
-        # 導航到使用者主頁
-        await profile.navigate_to_user_profile()
+        login = Login(self.page)
+        login_success = await login.login(account, password)
+        
+        return login_success
 
     async def update_article(self, article_id: str, subject: str, description: str) -> bool:
         """

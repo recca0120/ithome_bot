@@ -23,9 +23,9 @@ async def test_user_can_login_to_ithome(credential):
         assert automation.page is not None
         assert automation.browser is not None
         
-        # 驗證登入後的 URL
+        # 驗證登入後的 URL（應該在使用者主頁）
         current_url = automation.page.url
-        assert "member.ithome.com.tw/profile/account" in current_url, f"登入後應該在個人檔案頁面，但目前在 {current_url}"
+        assert "ithelp.ithome.com.tw/users/" in current_url, f"登入後應該在使用者主頁，但目前在 {current_url}"
         
         # 儲存 cookies 供後續測試使用
         await automation.save_cookies()

@@ -21,20 +21,19 @@ def credential():
 
 
 @pytest_asyncio.fixture
-async def automation():
-    """建立並初始化 IThomeAutomation 實例，並載入 cookies"""
-    from src.profile import Profile
-    
+async def automation(credential):
+    """建立並初始化 IThomeAutomation 實例，並執行登入"""
     automation = IThomeAutomation()
     await automation.initialize()
     
     # 載入 cookies
     await automation.load_cookies()
     
-    # 導航到 ithelp 並確認登入狀態
-    profile = Profile(automation.page)
-    await profile.goto_ithelp()
-    await profile.ithelp_login()
+    # 執行登入
+    await automation.login(credential["account"], credential["password"])
+    
+    # 儲存 cookies
+    await automation.save_cookies()
     
     yield automation
     

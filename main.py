@@ -48,37 +48,28 @@ async def update_article_cli(article_id: str, subject: str, description_file: st
         await automation.initialize()
         
         click.echo("🔑 載入 cookies...")
-        cookies_loaded = await automation.load_cookies()
+        await automation.load_cookies()
         
-        if not cookies_loaded:
-            click.echo("⚠️ 無法載入 cookies，執行登入流程...")
+        # 從環境變數讀取帳密
+        account = os.getenv('ITHOME_ACCOUNT')
+        password = os.getenv('ITHOME_PASSWORD')
+        
+        if not account or not password:
+            click.echo("❌ 錯誤: 請設定環境變數 ITHOME_ACCOUNT 和 ITHOME_PASSWORD")
+            sys.exit(1)
+        
+        # 執行登入（會自動檢查 cookies 並導航到使用者主頁）
+        click.echo("🔐 執行登入...")
+        if await automation.login(account, password):
+            click.echo("✅ 登入成功")
             
-            # 從環境變數或設定檔讀取帳密
-            account = os.getenv('ITHOME_ACCOUNT')
-            password = os.getenv('ITHOME_PASSWORD')
-            
-            if not account or not password:
-                click.echo("❌ 錯誤: 請設定環境變數 ITHOME_ACCOUNT 和 ITHOME_PASSWORD")
-                sys.exit(1)
-            
-            # 執行登入
-            click.echo("🔐 執行登入...")
-            if await automation.login(account, password):
-                click.echo("✅ 登入成功")
-                
-                # 儲存 cookies
-                click.echo("💾 儲存 cookies...")
-                await automation.save_cookies()
-                click.echo("✅ Cookies 已儲存")
-            else:
-                click.echo("❌ 登入失敗")
-                sys.exit(1)
+            # 儲存 cookies
+            click.echo("💾 儲存 cookies...")
+            await automation.save_cookies()
+            click.echo("✅ Cookies 已儲存")
         else:
-            click.echo("✅ 成功載入 cookies")
-        
-        # 不管是否載入 cookies，都要導航到使用者主頁
-        click.echo("📋 導航到使用者主頁...")
-        await automation.goto_user_profile()
+            click.echo("❌ 登入失敗")
+            sys.exit(1)
         
         click.echo("🔄 更新文章中...")
         success = await automation.update_article(article_id, subject, description)
