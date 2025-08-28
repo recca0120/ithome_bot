@@ -23,6 +23,9 @@ async def test_user_can_login_to_ithome():
     automation = IThomeAutomation(headless=headless)
     
     try:
+        # 初始化瀏覽器
+        await automation.initialize()
+        
         # Act - 執行登入
         login_success = await automation.login(account, password)
         
@@ -30,6 +33,9 @@ async def test_user_can_login_to_ithome():
         assert login_success is True, "登入應該要成功"
         assert automation.page is not None
         assert automation.browser is not None
+        
+        # 導航到使用者主頁
+        await automation.goto_user_profile()
         
         # 驗證已導航到我的主頁
         # 點擊我的主頁後應該會跳轉到使用者頁面

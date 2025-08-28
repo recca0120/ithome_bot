@@ -21,10 +21,23 @@ class IThomeAutomation:
         self.playwright: Playwright = None
         self.browser: Browser = None
         self.page: Page = None
+    
+    async def initialize(self):
+        """
+        初始化瀏覽器和頁面
+        """
+        # 啟動 Playwright
+        self.playwright = await async_playwright().start()
+        
+        # 啟動瀏覽器
+        self.browser = await self.playwright.webkit.launch(headless=self.headless)
+        
+        # 建立新頁面
+        self.page = await self.browser.new_page()
 
     async def login(self, account: str, password: str) -> bool:
         """
-        登入 iThome 並導航到 ithelp
+        登入 iThome
         
         Args:
             account: 使用者帳號
@@ -33,30 +46,29 @@ class IThomeAutomation:
         Returns:
             bool: 登入是否成功
         """
-        # 啟動 Playwright
-        self.playwright = await async_playwright().start()
-
-        # 啟動瀏覽器
-        self.browser = await self.playwright.webkit.launch(headless=self.headless)
-
-        # 建立新頁面
-        self.page = await self.browser.new_page()
-
+        if not self.page:
+            await self.initialize()
+        
         # 使用 Login class 執行登入
         login_handler = Login(self.page)
-        login_success = await login_handler.login(account, password)
+        return await login_handler.login(account, password)
+    
+    async def goto_user_profile(self) -> None:
+        """
+        導航到使用者主頁
+        需要先執行 login() 成功後才能呼叫
+        """
+        if not self.page:
+            raise RuntimeError("尚未登入，請先執行 login() 方法")
         
-        if login_success:
-            # 使用 Profile class 
-            profile = Profile(self.page)
-            # 導航到 ithelp
-            await profile.goto_ithelp()
-            # 執行 ithelp 登入
-            await profile.ithelp_login()
-            # 導航到使用者主頁
-            await profile.navigate_to_user_profile()
-            return True
-        return False
+        # 使用 Profile class 
+        profile = Profile(self.page)
+        # 導航到 ithelp
+        await profile.goto_ithelp()
+        # 執行 ithelp 登入
+        await profile.ithelp_login()
+        # 導航到使用者主頁
+        await profile.navigate_to_user_profile()
 
     async def close(self):
         """關閉瀏覽器"""
