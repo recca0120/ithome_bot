@@ -36,13 +36,10 @@ class Profile:
         如果已經登入（找到 user_dropdown），則跳過
         """
         # 檢查是否已經登入（是否存在使用者下拉選單）
-        try:
-            await self.user_dropdown.wait_for(timeout=1000)
+        # 使用 is_visible() 立即檢查，不等待
+        if await self.user_dropdown.is_visible():
             print(f"已經登入，跳過登入步驟")
             return
-        except:
-            # 如果找不到 user_dropdown，執行登入
-            pass
         
         # 點擊登入/註冊按鈕
         await self.login_register_button.click()
