@@ -3,6 +3,7 @@ iThome 鐵人賽登入自動化
 使用 Class 架構
 """
 import json
+import base64
 from pathlib import Path
 from playwright.async_api import async_playwright, Browser, Page, Playwright
 from .utils import base_path
@@ -19,12 +20,12 @@ class IThomeAutomation:
         
         Args:
             headless: 是否使用 headless 模式（預設 False，會顯示瀏覽器）
-            cookies_file: 儲存 cookies 的檔案路徑（預設為專案根目錄下的 cookies.json）
+            cookies_file: 儲存 cookies 的檔案路徑（預設為專案根目錄下的 cookies.txt）
         """
         self.headless = headless
-        # 如果沒有指定 cookies_file，使用專案根目錄下的 cookies.json
+        # 如果沒有指定 cookies_file，使用專案根目錄下的 cookies.txt
         if cookies_file is None:
-            self.cookies_file = base_path() / "cookies.json"
+            self.cookies_file = base_path() / "cookies.txt"
         else:
             self.cookies_file = Path(cookies_file).resolve()
         self.playwright: Playwright = None
@@ -98,7 +99,7 @@ class IThomeAutomation:
     
     async def save_cookies(self) -> None:
         """
-        儲存當前的 cookies 到檔案
+        儲存當前的 cookies 到檔案（Base64 編碼格式）
         """
         if not self.page:
             raise RuntimeError("頁面尚未初始化")
@@ -109,15 +110,19 @@ class IThomeAutomation:
         # 確保目錄存在
         self.cookies_file.parent.mkdir(parents=True, exist_ok=True)
         
+        # 將 cookies 轉換為 JSON 字串，然後進行 Base64 編碼
+        cookies_json = json.dumps(cookies, ensure_ascii=False)
+        cookies_encoded = base64.b64encode(cookies_json.encode('utf-8')).decode('ascii')
+        
         # 儲存到檔案
         with open(self.cookies_file, 'w', encoding='utf-8') as f:
-            json.dump(cookies, f, ensure_ascii=False, indent=2)
+            f.write(cookies_encoded)
         
         print(f"Cookies 已儲存到 {self.cookies_file.absolute()}")
     
     async def load_cookies(self) -> bool:
         """
-        從檔案載入 cookies
+        從檔案載入 cookies（Base64 編碼格式）
         
         Returns:
             bool: 是否成功載入 cookies
@@ -128,7 +133,11 @@ class IThomeAutomation:
         
         try:
             with open(self.cookies_file, 'r', encoding='utf-8') as f:
-                cookies = json.load(f)
+                cookies_encoded = f.read().strip()
+            
+            # Base64 解碼並轉換為 JSON
+            cookies_json = base64.b64decode(cookies_encoded).decode('utf-8')
+            cookies = json.loads(cookies_json)
             
             if self.page and cookies:
                 await self.page.context.add_cookies(cookies)

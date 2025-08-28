@@ -149,4 +149,4 @@ playwright-report/
 test-results/
 
 # Cookies
-cookies.json
+cookies.txt
