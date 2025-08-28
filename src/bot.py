@@ -10,26 +10,21 @@ from playwright.async_api import Page
 
 from .login import Login
 from .article import Article
-from .utils import base_path
 
 
 class Bot:
     """Bot 操作類別"""
 
-    def __init__(self, page: Page, cookies_file: str = None):
+    def __init__(self, page: Page, cookies_file: str = "cookies.txt"):
         """
         初始化
 
         Args:
             page: Playwright 的 Page 物件
-            cookies_file: 儲存 cookies 的檔案路徑（預設為專案根目錄下的 cookies.txt）
+            cookies_file: 儲存 cookies 的檔案路徑（預設為當前目錄的 cookies.txt）
         """
-        # 如果沒有指定 cookies_file，使用專案根目錄下的 cookies.txt
-        if cookies_file is None:
-            self.cookies_file = base_path() / "cookies.txt"
-        else:
-            self.cookies_file = Path(cookies_file).resolve()
         self.page = page
+        self.cookies_file = Path(cookies_file)
 
     async def login(self, account: str, password: str) -> bool:
         """

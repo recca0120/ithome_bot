@@ -2,7 +2,7 @@
 測試文章編輯功能
 """
 import pytest
-from src.utils import base_path
+from pathlib import Path
 
 
 
@@ -11,7 +11,7 @@ async def test_update_article(bot):
     """測試更新文章"""
 
     # 讀取文章內容
-    description_file = base_path() / "tests/fixtures/day01-python-environment-setup.md"
+    description_file = Path(__file__).parent / "fixtures/day01-python-environment-setup.md"
     with open(description_file, 'r', encoding='utf-8') as f:
         description = f.read()
 

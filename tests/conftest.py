@@ -4,12 +4,24 @@
 import pytest
 import pytest_asyncio
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from playwright.async_api import async_playwright
 from src.bot import Bot
 
 # 載入環境變數
 load_dotenv()
+
+
+def base_path() -> Path:
+    """
+    取得專案根目錄路徑
+
+    Returns:
+        Path: 專案根目錄路徑
+    """
+    # 從 tests 目錄往上一層取得專案根目錄
+    return Path(__file__).parent.parent.resolve()
 
 
 @pytest.fixture
