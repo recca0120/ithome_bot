@@ -47,8 +47,11 @@ class IThomeAutomation:
         login_success = await login_handler.login(account, password)
         
         if login_success:
-            # 使用 Navigation class 導航到使用者主頁
+            # 使用 Navigation class 
             navigation = Navigation(self.page)
+            # 先執行 ithelp 登入
+            await navigation.ithelp_login()
+            # 再導航到使用者主頁
             await navigation.navigate_to_user_profile()
             return True
         return False
