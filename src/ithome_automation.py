@@ -5,6 +5,7 @@ iThome 鐵人賽登入自動化
 import asyncio
 import base64
 import json
+import os
 import random
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from playwright.async_api import async_playwright, Browser, Page, Playwright
 
 from .login import Login
 from .profile import Profile
+from .recaptcha import ReCaptcha
 from .utils import base_path
 
 
@@ -84,15 +86,26 @@ class IThomeAutomation:
         # 導航到使用者主頁
         await profile.navigate_to_user_profile()
 
-    async def goto_article_edit(self, article_id: str, subject: str = None, description: str = None) -> None:
+    async def update_article(self, article_data: dict) -> bool:
         """
-        導航到文章編輯頁面並更新內容
+        更新文章內容
         
         Args:
-            article_id: 文章 ID
-            subject: 文章標題（可選）
-            description: 文章內容（可選）
+            article_data: 文章資料字典，包含:
+                - id: 文章 ID (必填)
+                - subject: 文章標題 (可選)
+                - description: 文章內容 (可選)
+        
+        Returns:
+            bool: 是否更新成功
         """
+        article_id = article_data.get('id')
+        if not article_id:
+            raise ValueError("id 是必填參數")
+        
+        subject = article_data.get('subject')
+        description = article_data.get('description')
+        
         if not self.page:
             raise RuntimeError("頁面尚未初始化，請先執行 initialize() 方法")
 
@@ -156,66 +169,46 @@ class IThomeAutomation:
             await self.page.wait_for_timeout(1000)
             print(f"✅ 已更新文章內容")
         
-        # 如果有提供標題或內容，點擊更新按鈕
+        # 如果有提供標題或內容，處理提交流程
         if subject is not None or description is not None:
             print("🎯 準備提交更新...")
             # 模擬人類行為：檢查內容後再提交的延遲
             await self.page.wait_for_timeout(random.randint(1500, 3000))
             
+            # 處理 reCAPTCHA
+            recaptcha = ReCaptcha(self.page)
+            recaptcha_handled = await recaptcha.handle_recaptcha()
+            
+            if not recaptcha_handled:
+                # 自動處理失敗，嘗試手動處理
+                print("🔄 自動處理 reCAPTCHA 失敗，切換到手動模式")
+                # 如果是 headless 模式就不等待手動操作
+                if not self.headless:
+                    await recaptcha.wait_for_manual_recaptcha()
+            
+            # reCAPTCHA 處理完成後，點擊更新按鈕
             update_button = self.page.locator('#updateSubmitBtn')
             await update_button.wait_for(state="visible", timeout=5000)
             await update_button.click()
             print("已點擊更新按鈕")
             
-            # 處理 reCAPTCHA
-            recaptcha_handled = await self.handle_recaptcha()
-            
-            if not recaptcha_handled:
-                # 自動處理失敗，嘗試手動處理
-                print("🔄 自動處理 reCAPTCHA 失敗，切換到手動模式")
-                await self.wait_for_manual_recaptcha()
-            
-            # 再次嘗試點擊更新按鈕（如果 reCAPTCHA 導致頁面重載）
-            try:
-                update_button = self.page.locator('#updateSubmitBtn')
-                if await update_button.is_visible(timeout=2000):
-                    print("🔄 重新點擊更新按鈕")
-                    await update_button.click()
-            except:
-                pass
-            
-            # 等待頁面跳轉或成功訊息
+            # 等待頁面跳轉
             try:
                 # 等待 URL 變化（從編輯頁面跳轉到文章頁面）
                 await self.page.wait_for_url(
                     lambda url: "/edit" not in url,
-                    timeout=15000  # 增加等待時間
+                    timeout=15000
                 )
-                print(f"✅ 文章已成功更新，跳轉到: {self.page.url}")
+                current_url = self.page.url
+                print(f"✅ 文章已更新，跳轉到: {current_url}")
+                return True
             except:
-                # 檢查是否有成功訊息或其他狀態指示
-                success_indicators = [
-                    '.alert-success',
-                    '.success-message', 
-                    '[class*="success"]',
-                    'text=成功',
-                    'text=已更新',
-                    'text=saved'
-                ]
-                
-                success_found = False
-                for indicator in success_indicators:
-                    try:
-                        element = self.page.locator(indicator)
-                        if await element.is_visible(timeout=1000):
-                            success_found = True
-                            print(f"✅ 發現成功指示: {indicator}")
-                            break
-                    except:
-                        continue
-                
-                if not success_found:
-                    print("⚠️ 無法確認更新狀態，請手動檢查")
+                current_url = self.page.url
+                print(f"⚠️ 更新狀態未知，當前頁面: {current_url}")
+                return False
+        
+        # 如果沒有提供標題或內容，直接回傳 True（沒有更新需求）
+        return True
 
     async def save_cookies(self) -> None:
         """
@@ -268,144 +261,6 @@ class IThomeAutomation:
 
         return False
 
-    async def handle_recaptcha(self) -> bool:
-        """
-        處理 reCAPTCHA 驗證
-        
-        Returns:
-            bool: 是否成功處理 reCAPTCHA
-        """
-        print("🔍 檢查是否有 reCAPTCHA...")
-        
-        # 等待頁面完全載入
-        await self.page.wait_for_timeout(2000)
-        
-        # 檢查不同類型的 reCAPTCHA
-        recaptcha_selectors = [
-            'iframe[src*="recaptcha/api2/anchor"]',
-            'iframe[title="reCAPTCHA"]', 
-            '.g-recaptcha',
-            'iframe[src*="recaptcha"]'
-        ]
-        
-        recaptcha_found = False
-        for selector in recaptcha_selectors:
-            elements = self.page.locator(selector)
-            if await elements.count() > 0:
-                print(f"⚠️ 偵測到 reCAPTCHA: {selector}")
-                recaptcha_found = True
-                break
-        
-        if not recaptcha_found:
-            print("✅ 未發現 reCAPTCHA")
-            return True
-        
-        # 嘗試自動處理 reCAPTCHA checkbox
-        try:
-            print("🤖 嘗試自動處理 reCAPTCHA checkbox...")
-            
-            # 隨機等待，模擬人類行為
-            await self.page.wait_for_timeout(random.randint(1000, 3000))
-            
-            # 方法 1: 使用 frame_locator
-            recaptcha_frame = self.page.frame_locator('iframe[src*="recaptcha/api2/anchor"]')
-            checkbox_selectors = [
-                '.recaptcha-checkbox-border',
-                '.recaptcha-checkbox',
-                '#recaptcha-anchor',
-                '[role="checkbox"]'
-            ]
-            
-            checkbox_clicked = False
-            for checkbox_selector in checkbox_selectors:
-                try:
-                    checkbox = recaptcha_frame.locator(checkbox_selector)
-                    if await checkbox.is_visible(timeout=2000):
-                        print(f"找到 checkbox: {checkbox_selector}")
-                        
-                        # 模擬滑鼠移動和點擊
-                        await checkbox.hover()
-                        await self.page.wait_for_timeout(random.randint(200, 800))
-                        await checkbox.click()
-                        
-                        print("✅ 已點擊 reCAPTCHA checkbox")
-                        checkbox_clicked = True
-                        break
-                except Exception as e:
-                    print(f"嘗試 {checkbox_selector} 失敗: {str(e)[:100]}")
-                    continue
-            
-            if not checkbox_clicked:
-                # 方法 2: 嘗試通過所有 frames 尋找
-                print("🔄 嘗試通過所有 frames 尋找 checkbox...")
-                frames = self.page.frames
-                for frame in frames:
-                    if 'recaptcha' in frame.url.lower():
-                        try:
-                            for selector in checkbox_selectors:
-                                checkbox = frame.locator(selector)
-                                if await checkbox.is_visible(timeout=1000):
-                                    await checkbox.click()
-                                    print("✅ 在 frame 中成功點擊 checkbox")
-                                    checkbox_clicked = True
-                                    break
-                            if checkbox_clicked:
-                                break
-                        except:
-                            continue
-            
-            if checkbox_clicked:
-                # 等待驗證完成
-                print("⏳ 等待 reCAPTCHA 驗證完成...")
-                await self.page.wait_for_timeout(3000)
-                
-                # 檢查是否出現圖片挑戰
-                challenge_frame = self.page.frame_locator('iframe[src*="recaptcha/api2/bframe"]')
-                try:
-                    challenge_visible = await challenge_frame.locator('.rc-imageselect-desc').is_visible(timeout=2000)
-                    if challenge_visible:
-                        print("❌ 出現圖片挑戰，需要手動處理")
-                        return False
-                except:
-                    pass
-                
-                print("✅ reCAPTCHA checkbox 處理完成")
-                return True
-            else:
-                print("❌ 無法找到或點擊 reCAPTCHA checkbox")
-                return False
-                
-        except Exception as e:
-            print(f"❌ 自動處理 reCAPTCHA 失敗: {e}")
-            return False
-
-    async def wait_for_manual_recaptcha(self):
-        """等待手動完成 reCAPTCHA"""
-        if self.headless:
-            print("⚠️ Headless 模式下無法手動處理 reCAPTCHA")
-            return False
-        
-        print("🖐️ 請手動完成 reCAPTCHA 驗證...")
-        print("   - 如果需要，點擊 checkbox")
-        print("   - 如果出現圖片挑戰，請完成挑戰")
-        print("   - 完成後程式將自動繼續")
-        
-        # 等待 30 秒讓用戶完成
-        for i in range(30):
-            await self.page.wait_for_timeout(1000)
-            
-            # 檢查是否還有未完成的 reCAPTCHA
-            recaptcha_frames = self.page.locator('iframe[src*="recaptcha"]')
-            if await recaptcha_frames.count() == 0:
-                print("✅ reCAPTCHA 已完成")
-                return True
-            
-            # 檢查是否有錯誤訊息或成功狀態
-            if i % 5 == 0:  # 每 5 秒檢查一次
-                print(f"⏳ 等待中... ({30-i} 秒剩餘)")
-        
-        print("⏰ 手動處理時間已到")
-        return True
 
     async def close(self):
         """關閉瀏覽器"""
