@@ -79,6 +79,23 @@ class IThomeAutomation:
         # 導航到使用者主頁
         await profile.navigate_to_user_profile()
     
+    async def goto_article_edit(self, article_id: str) -> None:
+        """
+        導航到文章編輯頁面
+        
+        Args:
+            article_id: 文章 ID
+        """
+        if not self.page:
+            raise RuntimeError("頁面尚未初始化，請先執行 initialize() 方法")
+        
+        edit_url = f"https://ithelp.ithome.com.tw/articles/{article_id}/edit"
+        await self.page.goto(edit_url)
+        print(f"已導航到文章編輯頁面: {edit_url}")
+        
+        # 等待頁面載入
+        await self.page.wait_for_load_state("domcontentloaded")
+    
     async def save_cookies(self) -> None:
         """
         儲存當前的 cookies 到檔案
