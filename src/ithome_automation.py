@@ -2,11 +2,8 @@
 iThome 鐵人賽登入自動化
 使用 Class 架構
 """
-import asyncio
 import base64
 import json
-import os
-import random
 from pathlib import Path
 
 from playwright.async_api import async_playwright, Browser, Page, Playwright
@@ -133,7 +130,7 @@ class IThomeAutomation:
                 await self.page.context.add_cookies(cookies)
                 # 已載入 cookies
                 return True
-        except Exception as e:
+        except Exception:
             # 載入 cookies 失敗
             pass
         
