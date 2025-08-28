@@ -117,7 +117,7 @@ class ArticleUpdater:
         # 準備提交更新...
 
         # 模擬人類行為：檢查內容後再提交的延遲
-        await self.page.wait_for_timeout(random.randint(1500, 3000))
+        # await self.page.wait_for_timeout(random.randint(1500, 3000))
 
         # 處理 reCAPTCHA
         if not await self._handle_recaptcha():

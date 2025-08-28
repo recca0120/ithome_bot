@@ -39,8 +39,8 @@ class ReCaptcha:
         """
         # 檢查是否有 reCAPTCHA...
 
-        # 等待頁面完全載入
-        await self.page.wait_for_timeout(2000)
+        # 等待頁面載入必要元素
+        await self.page.wait_for_load_state("networkidle", timeout=5000)
 
         # 檢查是否有 reCAPTCHA
         if not await self._detect_recaptcha():
