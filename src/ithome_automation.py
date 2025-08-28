@@ -2,6 +2,8 @@
 iThome 鐵人賽登入自動化
 使用 Class 架構
 """
+import json
+from pathlib import Path
 from playwright.async_api import async_playwright, Browser, Page, Playwright
 from .login import Login
 from .profile import Profile
@@ -10,14 +12,16 @@ from .profile import Profile
 class IThomeAutomation:
     """iThome 自動化操作類別"""
 
-    def __init__(self, headless: bool = False):
+    def __init__(self, headless: bool = False, cookies_file: str = "cookies.json"):
         """
         初始化
         
         Args:
             headless: 是否使用 headless 模式（預設 False，會顯示瀏覽器）
+            cookies_file: 儲存 cookies 的檔案路徑（預設 cookies.json）
         """
         self.headless = headless
+        self.cookies_file = cookies_file
         self.playwright: Playwright = None
         self.browser: Browser = None
         self.page: Page = None
@@ -69,6 +73,50 @@ class IThomeAutomation:
         await profile.ithelp_login()
         # 導航到使用者主頁
         await profile.navigate_to_user_profile()
+        
+        # 成功後儲存 cookies
+        await self.save_cookies()
+    
+    async def save_cookies(self) -> None:
+        """
+        儲存當前的 cookies 到檔案
+        """
+        if not self.page:
+            raise RuntimeError("頁面尚未初始化")
+        
+        # 取得所有 cookies
+        cookies = await self.page.context.cookies()
+        
+        # 儲存到檔案
+        with open(self.cookies_file, 'w', encoding='utf-8') as f:
+            json.dump(cookies, f, ensure_ascii=False, indent=2)
+        
+        print(f"Cookies 已儲存到 {self.cookies_file}")
+    
+    async def load_cookies(self) -> bool:
+        """
+        從檔案載入 cookies
+        
+        Returns:
+            bool: 是否成功載入 cookies
+        """
+        cookies_path = Path(self.cookies_file)
+        if not cookies_path.exists():
+            print(f"找不到 cookies 檔案: {self.cookies_file}")
+            return False
+        
+        try:
+            with open(self.cookies_file, 'r', encoding='utf-8') as f:
+                cookies = json.load(f)
+            
+            if self.page and cookies:
+                await self.page.context.add_cookies(cookies)
+                print(f"已載入 {len(cookies)} 個 cookies")
+                return True
+        except Exception as e:
+            print(f"載入 cookies 失敗: {e}")
+        
+        return False
 
     async def close(self):
         """關閉瀏覽器"""
