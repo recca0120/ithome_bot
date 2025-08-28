@@ -26,7 +26,7 @@ class Profile:
         導航到 ithelp.ithome.com.tw
         """
         await self.page.goto("https://ithelp.ithome.com.tw/")
-        print(f"已導航到 ithelp.ithome.com.tw")
+        # 已導航到 ithelp.ithome.com.tw
         # 等待頁面載入
         await self.page.wait_for_load_state("domcontentloaded")
     
@@ -38,12 +38,12 @@ class Profile:
         # 檢查是否已經登入（是否存在使用者下拉選單）
         # 使用 is_visible() 立即檢查，不等待
         if await self.user_dropdown.is_visible():
-            print(f"已經登入，跳過登入步驟")
+            # 已經登入，跳過登入步驟
             return
         
         # 點擊登入/註冊按鈕
         await self.login_register_button.click()
-        print(f"已點擊登入/註冊按鈕")
+        # 已點擊登入/註冊按鈕
         
         # 等待頁面載入
         await self.page.wait_for_load_state("domcontentloaded")
@@ -58,8 +58,8 @@ class Profile:
         """
         # 點擊使用者下拉選單
         await self.user_dropdown.click()
-        print(f"已點擊使用者下拉選單")
+        # 已點擊使用者下拉選單
         
         # 點擊「我的主頁」
         await self.my_page_link.click()
-        print(f"已點擊我的主頁")
+        # 已點擊我的主頁

@@ -6,17 +6,17 @@ from src.ithome_automation import IThomeAutomation
 
 
 @pytest.mark.asyncio
-async def test_user_can_login_to_ithome(test_config):
+async def test_user_can_login_to_ithome(credential):
     """測試使用者可以登入到 iThome"""
     
-    automation = IThomeAutomation(headless=test_config["headless"])
+    automation = IThomeAutomation()
     
     try:
         # 初始化瀏覽器
         await automation.initialize()
         
         # Act - 執行登入
-        login_success = await automation.login(test_config["account"], test_config["password"])
+        login_success = await automation.login(credential["account"], credential["password"])
         
         # Assert - 驗證登入成功
         assert login_success is True, "登入應該要成功"

@@ -12,21 +12,20 @@ load_dotenv()
 
 
 @pytest.fixture
-def test_config():
-    """從環境變數取得測試設定"""
+def credential():
+    """從環境變數取得帳號密碼"""
     return {
         "account": os.getenv("ITHOME_ACCOUNT"),
-        "password": os.getenv("ITHOME_PASSWORD"),
-        "headless": os.getenv("HEADLESS", "false").lower() == "true"
+        "password": os.getenv("ITHOME_PASSWORD")
     }
 
 
 @pytest_asyncio.fixture
-async def automation(test_config):
+async def automation():
     """建立並初始化 IThomeAutomation 實例，並載入 cookies"""
     from src.profile import Profile
     
-    automation = IThomeAutomation(headless=test_config["headless"])
+    automation = IThomeAutomation()
     await automation.initialize()
     
     # 載入 cookies

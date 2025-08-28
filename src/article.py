@@ -22,7 +22,7 @@ class Article:
         self.subject_input = page.locator('input[name="subject"]')
         self.update_button = page.locator('#updateSubmitBtn')
 
-    async def update_article(self, article_id: str, subject: str, description: str, headless: bool = False) -> bool:
+    async def update_article(self, article_id: str, subject: str, description: str) -> bool:
         """
         更新文章內容
         
@@ -30,7 +30,6 @@ class Article:
             article_id: 文章 ID
             subject: 文章標題
             description: 文章內容
-            headless: 是否為 headless 模式
         
         Returns:
             bool: 是否更新成功
@@ -46,17 +45,17 @@ class Article:
         await self._update_description(description)
         
         # 提交更新
-        return await self._submit_update(headless)
+        return await self._submit_update()
 
     async def _navigate_to_edit_page(self, article_id: str) -> None:
         """導航到文章編輯頁面"""
         edit_url = f"https://ithelp.ithome.com.tw/articles/{article_id}/edit"
         await self.page.goto(edit_url)
-        print(f"已導航到文章編輯頁面: {edit_url}")
+        # 已導航到文章編輯頁面: {edit_url}
 
     async def _update_subject(self, subject: str) -> None:
         """更新文章標題"""
-        print("📝 準備更新文章標題...")
+        # 準備更新文章標題...
         
         # 模擬人類行為：隨機延遲
         await self.page.wait_for_timeout(random.randint(500, 1500))
@@ -70,11 +69,11 @@ class Article:
         await self.page.wait_for_timeout(random.randint(200, 500))
         await self.subject_input.fill(subject)
         
-        print(f"✅ 已更新文章標題: {subject}")
+        # 已更新文章標題: {subject}
 
     async def _update_description(self, description: str) -> None:
         """更新文章內容"""
-        print("📄 準備更新文章內容...")
+        # 準備更新文章內容...
         
         # 模擬人類行為：在標題和內容之間的延遲
         await self.page.wait_for_timeout(random.randint(800, 2000))
@@ -105,17 +104,17 @@ class Article:
         
         # 等待內容設定完成
         await self.page.wait_for_timeout(1000)
-        print("✅ 已更新文章內容")
+        # 已更新文章內容
 
-    async def _submit_update(self, headless: bool) -> bool:
+    async def _submit_update(self) -> bool:
         """提交更新"""
-        print("🎯 準備提交更新...")
+        # 準備提交更新...
         
         # 模擬人類行為：檢查內容後再提交的延遲
         await self.page.wait_for_timeout(random.randint(1500, 3000))
         
         # 處理 reCAPTCHA
-        if not await self._handle_recaptcha(headless):
+        if not await self._handle_recaptcha():
             return False
         
         # 點擊更新按鈕
@@ -124,15 +123,15 @@ class Article:
         # 等待頁面跳轉
         return await self._wait_for_redirect()
 
-    async def _handle_recaptcha(self, headless: bool) -> bool:
+    async def _handle_recaptcha(self) -> bool:
         """處理 reCAPTCHA"""
         recaptcha = ReCaptcha(self.page)
         recaptcha_handled = await recaptcha.handle_recaptcha()
         
         if not recaptcha_handled:
-            print("🔄 自動處理 reCAPTCHA 失敗，切換到手動模式")
-            if not headless:
-                await recaptcha.wait_for_manual_recaptcha()
+            # 自動處理 reCAPTCHA 失敗，切換到手動模式
+            # 固定顯示瀏覽器，可以手動處理
+            await recaptcha.wait_for_manual_recaptcha()
         
         return True
 
@@ -140,7 +139,7 @@ class Article:
         """點擊更新按鈕"""
         await self.update_button.wait_for(state="visible", timeout=5000)
         await self.update_button.click()
-        print("已點擊更新按鈕")
+        # 已點擊更新按鈕
 
     async def _wait_for_redirect(self) -> bool:
         """等待頁面跳轉"""
@@ -150,9 +149,9 @@ class Article:
                 timeout=15000
             )
             current_url = self.page.url
-            print(f"✅ 文章已更新，跳轉到: {current_url}")
+            # 文章已更新，跳轉到: {current_url}
             return True
         except:
             current_url = self.page.url
-            print(f"⚠️ 更新狀態未知，當前頁面: {current_url}")
+            # 更新狀態未知，當前頁面: {current_url}
             return False

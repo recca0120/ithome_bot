@@ -1,87 +1,130 @@
+#!/usr/bin/env python3
 """
-主程式 - 使用 Class 架構開啟 iThome 鐵人賽登入頁面
+iThome 鐵人賽文章更新 CLI 工具
 """
 import asyncio
+import os
+import sys
+from pathlib import Path
+
+import click
+from dotenv import load_dotenv
+
 from src.ithome_automation import IThomeAutomation
 
+# 載入 .env 檔案
+load_dotenv()
 
-async def main():
-    """主函式 - 使用 IThomeAutomation 類別"""
-    # 建立自動化物件（非 headless 模式）
-    automation = IThomeAutomation(headless=False)
+
+async def update_article_cli(article_id: str, subject: str, description_file: str) -> None:
+    """
+    透過 CLI 更新文章
     
+    Args:
+        article_id: 文章 ID
+        subject: 文章標題
+        description_file: 文章內容檔案路徑
+    """
+    # 檢查描述檔案是否存在
+    file_path = Path(description_file)
+    if not file_path.exists():
+        click.echo(f"❌ 錯誤: 找不到檔案 {file_path}")
+        sys.exit(1)
+    
+    # 讀取文章內容
     try:
-        # 開啟瀏覽器
-        await automation.open_browser()
-        
-        # 導航到登入頁面
-        await automation.goto_login_page()
-        
-        # 等待使用者查看
-        print("瀏覽器將保持開啟狀態...")
-        print("按 Ctrl+C 關閉")
-        
-        # 保持瀏覽器開啟
-        while True:
-            await asyncio.sleep(1)
-            
-    except KeyboardInterrupt:
-        print("\n準備關閉...")
-    finally:
-        # 關閉瀏覽器
-        await automation.close()
-        print("完成！")
-
-
-async def demo_login():
-    """示範登入流程（需要真實帳號密碼）"""
-    import os
-    from dotenv import load_dotenv
-    
-    # 載入環境變數
-    load_dotenv()
-    
-    username = os.getenv("ITHOME_USERNAME", "")
-    password = os.getenv("ITHOME_PASSWORD", "")
-    
-    if not username or not password:
-        print("請在 .env 檔案設定 ITHOME_USERNAME 和 ITHOME_PASSWORD")
-        return
+        with open(file_path, 'r', encoding='utf-8') as f:
+            description = f.read()
+        click.echo(f"📖 已讀取文章內容檔案: {description_file}，長度: {len(description)} 字元")
+    except Exception as e:
+        click.echo(f"❌ 讀取檔案失敗: {e}")
+        sys.exit(1)
     
     # 建立自動化物件
-    automation = IThomeAutomation(headless=False)
+    automation = IThomeAutomation()
     
     try:
-        # 鏈式呼叫
-        await automation.open_browser()
-        await automation.goto_login_page()
-        await automation.fill_login_form(username, password)
-        await automation.wait(2)  # 等待 2 秒讓使用者看到填寫的內容
-        await automation.submit_login()
+        click.echo("🚀 正在初始化瀏覽器...")
+        await automation.initialize()
         
-        # 等待登入完成
-        await automation.wait(3)
+        click.echo("🔑 載入 cookies...")
+        cookies_loaded = await automation.load_cookies()
         
-        # 檢查是否登入成功
-        if await automation.is_logged_in():
-            print("登入成功！")
-            current_url = automation.page.url
-            print(f"當前頁面: {current_url}")
+        if not cookies_loaded:
+            click.echo("⚠️ 無法載入 cookies，執行登入流程...")
+            
+            # 從環境變數或設定檔讀取帳密
+            account = os.getenv('ITHOME_ACCOUNT')
+            password = os.getenv('ITHOME_PASSWORD')
+            
+            if not account or not password:
+                click.echo("❌ 錯誤: 請設定環境變數 ITHOME_ACCOUNT 和 ITHOME_PASSWORD")
+                sys.exit(1)
+            
+            # 執行登入
+            click.echo("🔐 執行登入...")
+            if await automation.login(account, password):
+                click.echo("✅ 登入成功")
+                
+                # 儲存 cookies
+                click.echo("💾 儲存 cookies...")
+                await automation.save_cookies()
+                click.echo("✅ Cookies 已儲存")
+            else:
+                click.echo("❌ 登入失敗")
+                sys.exit(1)
         else:
-            print("登入失敗")
+            click.echo("✅ 成功載入 cookies")
         
-        # 等待 5 秒讓使用者查看結果
-        await automation.wait(5)
+        # 不管是否載入 cookies，都要導航到使用者主頁
+        click.echo("📋 導航到使用者主頁...")
+        await automation.goto_user_profile()
         
+        click.echo("🔄 更新文章中...")
+        success = await automation.update_article(article_id, subject, description)
+        
+        if success:
+            click.echo("✅ 文章更新成功!")
+        else:
+            click.echo("❌ 文章更新失敗")
+            sys.exit(1)
+            
     except Exception as e:
-        print(f"發生錯誤: {e}")
+        click.echo(f"❌ 執行過程中發生錯誤: {e}")
+        sys.exit(1)
     finally:
         await automation.close()
+        click.echo("🏁 程式執行完成")
+
+
+@click.command()
+@click.argument('article_id')
+@click.argument('subject')
+@click.argument('description_file')
+def main(article_id: str, subject: str, description_file: str) -> None:
+    """
+    iThome 鐵人賽文章更新工具
+    
+    ARTICLE_ID: 文章 ID
+    
+    SUBJECT: 文章標題
+    
+    DESCRIPTION_FILE: 文章內容檔案路徑
+    
+    \b
+    使用範例:
+      python main.py 10376177 "Day 01 標題" tests/fixtures/day01-python-environment-setup.md
+    """
+    click.echo("🤖 iThome 鐵人賽文章更新工具")
+    click.echo("=" * 50)
+    click.echo(f"📄 文章 ID: {article_id}")
+    click.echo(f"📝 文章標題: {subject}")
+    click.echo(f"📁 內容檔案: {description_file}")
+    click.echo("=" * 50)
+    
+    # 執行更新
+    asyncio.run(update_article_cli(article_id, subject, description_file))
 
 
 if __name__ == "__main__":
-    # 執行主程式
-    asyncio.run(main())
-    
-    # 如果要測試登入，取消下面的註解
-    # asyncio.run(demo_login())
+    main()

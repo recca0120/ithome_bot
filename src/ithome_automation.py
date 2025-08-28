@@ -20,15 +20,13 @@ from .utils import base_path
 class IThomeAutomation:
     """iThome 自動化操作類別"""
 
-    def __init__(self, headless: bool = False, cookies_file: str = None):
+    def __init__(self, cookies_file: str = None):
         """
         初始化
         
         Args:
-            headless: 是否使用 headless 模式（預設 False，會顯示瀏覽器）
             cookies_file: 儲存 cookies 的檔案路徑（預設為專案根目錄下的 cookies.txt）
         """
-        self.headless = headless
         # 如果沒有指定 cookies_file，使用專案根目錄下的 cookies.txt
         if cookies_file is None:
             self.cookies_file = base_path() / "cookies.txt"
@@ -45,8 +43,8 @@ class IThomeAutomation:
         # 啟動 Playwright
         self.playwright = await async_playwright().start()
 
-        # 啟動瀏覽器
-        self.browser = await self.playwright.webkit.launch(headless=self.headless)
+        # 啟動瀏覽器（固定使用顯示模式）
+        self.browser = await self.playwright.webkit.launch(headless=False)
 
         # 建立新頁面
         self.page = await self.browser.new_page()
@@ -103,7 +101,7 @@ class IThomeAutomation:
         
         # 使用 Article class 處理文章更新
         article = Article(self.page)
-        return await article.update_article(article_id, subject, description, self.headless)
+        return await article.update_article(article_id, subject, description)
 
     async def save_cookies(self) -> None:
         """
@@ -126,7 +124,7 @@ class IThomeAutomation:
         with open(self.cookies_file, 'w', encoding='utf-8') as f:
             f.write(cookies_encoded)
 
-        print(f"Cookies 已儲存到 {self.cookies_file.absolute()}")
+        # Cookies 已儲存
 
     async def load_cookies(self) -> bool:
         """
@@ -136,7 +134,7 @@ class IThomeAutomation:
             bool: 是否成功載入 cookies
         """
         if not self.cookies_file.exists():
-            print(f"找不到 cookies 檔案: {self.cookies_file.absolute()}")
+            # 找不到 cookies 檔案
             return False
 
         try:
@@ -149,11 +147,12 @@ class IThomeAutomation:
 
             if self.page and cookies:
                 await self.page.context.add_cookies(cookies)
-                print(f"已從 {self.cookies_file.absolute()} 載入 {len(cookies)} 個 cookies")
+                # 已載入 cookies
                 return True
         except Exception as e:
-            print(f"載入 cookies 失敗: {e}")
-
+            # 載入 cookies 失敗
+            pass
+        
         return False
 
 
@@ -161,6 +160,6 @@ class IThomeAutomation:
         """關閉瀏覽器"""
         if self.browser:
             await self.browser.close()
-            print("瀏覽器已關閉")
+            # 瀏覽器已關閉
         if self.playwright:
             await self.playwright.stop()

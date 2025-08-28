@@ -35,28 +35,28 @@ class Login:
         """
         # 導航到登入頁面
         await self.page.goto("https://member.ithome.com.tw/login")
-        print(f"已開啟登入頁面")
+        # 已開啟登入頁面
 
         # 等待頁面載入完畢
         await self.page.wait_for_load_state("domcontentloaded")
 
         # 填寫帳號
         await self.account_input.fill(account)
-        print(f"已填寫帳號: {account}")
+        # 已填寫帳號: {account}
 
         # 填寫密碼
         await self.password_input.fill(password)
-        print(f"已填寫密碼")
+        # 已填寫密碼
 
         # 勾選「記住我」checkbox
         is_checked = await self.remember_checkbox.is_checked()
         if not is_checked:
             await self.remember_checkbox.check()
-            print(f"已勾選「記住我」")
+            # 已勾選「記住我」
 
         # 點擊登入按鈕
         await self.login_button.click()
-        print(f"已點擊登入按鈕")
+        # 已點擊登入按鈕
 
         # 檢查是否登入成功
         return await self.is_logged_in()
@@ -74,8 +74,8 @@ class Login:
         current_url = self.page.url
         # 檢查是否在個人檔案頁面
         if "https://member.ithome.com.tw/profile/account" in current_url:
-            print(f"登入成功！當前頁面: {current_url}")
+            # 登入成功！當前頁面: {current_url}
             return True
         else:
-            print(f"登入失敗，當前頁面: {current_url}")
+            # 登入失敗，當前頁面: {current_url}
             return False
