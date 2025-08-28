@@ -16,19 +16,6 @@ class ReCaptcha:
             page: Playwright 頁面物件
         """
         self.page = page
-        # 初始化 selectors
-        self.recaptcha_selectors = [
-            'iframe[src*="recaptcha/api2/anchor"]',
-            'iframe[title="reCAPTCHA"]',
-            '.g-recaptcha',
-            'iframe[src*="recaptcha"]'
-        ]
-        self.checkbox_selectors = [
-            '.recaptcha-checkbox-border',
-            '.recaptcha-checkbox',
-            '#recaptcha-anchor',
-            '[role="checkbox"]'
-        ]
 
     async def handle_recaptcha(self) -> bool:
         """
@@ -55,25 +42,21 @@ class ReCaptcha:
 
     async def _detect_recaptcha(self) -> bool:
         """偵測是否有 reCAPTCHA"""
-        for selector in self.recaptcha_selectors:
-            elements = self.page.locator(selector)
-            if await elements.count() > 0:
-                # 偵測到 reCAPTCHA: {selector}
-                return True
+        recaptcha_iframe = self.page.locator('iframe[src*="recaptcha/api2/anchor"]')
+        if await recaptcha_iframe.count() > 0:
+            # 偵測到 reCAPTCHA
+            return True
         return False
 
     async def _scroll_to_recaptcha(self) -> None:
         """捲動到 reCAPTCHA 位置"""
         # 捲動到 reCAPTCHA 位置...
         try:
-            # 嘗試找到 reCAPTCHA 元素並捲動到它
-            for selector in self.recaptcha_selectors:
-                elements = self.page.locator(selector)
-                if await elements.count() > 0:
-                    await elements.first.scroll_into_view_if_needed()
-                    await self.page.wait_for_timeout(500)
-                    # 已捲動到 reCAPTCHA
-                    return
+            recaptcha_iframe = self.page.locator('iframe[src*="recaptcha/api2/anchor"]')
+            if await recaptcha_iframe.count() > 0:
+                await recaptcha_iframe.first.scroll_into_view_if_needed()
+                await self.page.wait_for_timeout(500)
+                # 已捲動到 reCAPTCHA
         except Exception as e:
             # 捲動到 reCAPTCHA 失敗: {e}
             pass
@@ -85,12 +68,8 @@ class ReCaptcha:
         # 隨機等待，模擬人類行為
         await self.page.wait_for_timeout(random.randint(1000, 3000))
 
-        # 方法 1: 使用 frame_locator
+        # 使用 frame_locator 點擊 checkbox
         if await self._try_frame_locator():
-            return await self._verify_completion()
-
-        # 方法 2: 嘗試通過所有 frames 尋找
-        if await self._try_all_frames():
             return await self._verify_completion()
 
         # 無法自動處理 reCAPTCHA
@@ -100,46 +79,17 @@ class ReCaptcha:
         """使用 frame_locator 嘗試點擊 checkbox"""
         try:
             recaptcha_frame = self.page.frame_locator('iframe[src*="recaptcha/api2/anchor"]')
-
-            for checkbox_selector in self.checkbox_selectors:
-                try:
-                    checkbox = recaptcha_frame.locator(checkbox_selector)
-                    if await checkbox.is_visible(timeout=2000):
-                        # 找到 checkbox: {checkbox_selector}
-                        await self._click_checkbox(checkbox)
-                        return True
-                except Exception as e:
-                    # 嘗試 {checkbox_selector} 失敗: {str(e)[:100]}
-                    continue
-
+            checkbox = recaptcha_frame.locator('.recaptcha-checkbox')
+            if await checkbox.is_visible(timeout=2000):
+                # 找到 checkbox
+                await self._click_checkbox(checkbox)
+                return True
         except Exception as e:
             # frame_locator 方法失敗: {str(e)[:100]}
             pass
 
         return False
 
-    async def _try_all_frames(self) -> bool:
-        """嘗試通過所有 frames 尋找 checkbox"""
-        # 嘗試通過所有 frames 尋找 checkbox...
-
-        try:
-            frames = self.page.frames
-            for frame in frames:
-                if 'recaptcha' in frame.url.lower():
-                    for selector in self.checkbox_selectors:
-                        try:
-                            checkbox = frame.locator(selector)
-                            if await checkbox.is_visible(timeout=1000):
-                                await checkbox.click()
-                                # 在 frame 中成功點擊 checkbox
-                                return True
-                        except:
-                            continue
-        except Exception as e:
-            # all_frames 方法失敗: {str(e)[:100]}
-            pass
-
-        return False
 
     async def _click_checkbox(self, checkbox) -> None:
         """點擊 checkbox"""
