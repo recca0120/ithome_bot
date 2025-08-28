@@ -1,11 +1,11 @@
 """
-iThome 導航功能
+iThome 個人檔案功能
 """
 from playwright.async_api import Page
 
 
-class Navigation:
-    """導航功能類別"""
+class Profile:
+    """個人檔案功能類別"""
 
     def __init__(self, page: Page):
         """
@@ -32,15 +32,18 @@ class Navigation:
     
     async def ithelp_login(self) -> None:
         """
-        登入到 ithelp.ithome.com.tw
-        
-        執行流程：
-        1. 導航到 ithelp.ithome.com.tw
-        2. 點擊登入/註冊按鈕
+        點擊登入/註冊按鈕進行 ithelp 登入
+        如果已經登入（找到 user_dropdown），則跳過
         """
-        # 導航到 ithelp.ithome.com.tw
-        await self.goto_ithelp()
-
+        # 檢查是否已經登入（是否存在使用者下拉選單）
+        try:
+            await self.user_dropdown.wait_for(timeout=1000)
+            print(f"已經登入，跳過登入步驟")
+            return
+        except:
+            # 如果找不到 user_dropdown，執行登入
+            pass
+        
         # 點擊登入/註冊按鈕
         await self.login_register_button.click()
         print(f"已點擊登入/註冊按鈕")

@@ -4,7 +4,7 @@ iThome 鐵人賽登入自動化
 """
 from playwright.async_api import async_playwright, Browser, Page, Playwright
 from .login import Login
-from .navigation import Navigation
+from .profile import Profile
 
 
 class IThomeAutomation:
@@ -47,12 +47,14 @@ class IThomeAutomation:
         login_success = await login_handler.login(account, password)
         
         if login_success:
-            # 使用 Navigation class 
-            navigation = Navigation(self.page)
-            # 先執行 ithelp 登入
-            await navigation.ithelp_login()
-            # 再導航到使用者主頁
-            await navigation.navigate_to_user_profile()
+            # 使用 Profile class 
+            profile = Profile(self.page)
+            # 導航到 ithelp
+            await profile.goto_ithelp()
+            # 執行 ithelp 登入
+            await profile.ithelp_login()
+            # 導航到使用者主頁
+            await profile.navigate_to_user_profile()
             return True
         return False
 
