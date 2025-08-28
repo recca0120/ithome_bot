@@ -197,7 +197,19 @@ class ReCaptcha:
     async def _has_pending_recaptcha(self) -> bool:
         """檢查是否還有未完成的 reCAPTCHA"""
         try:
-            recaptcha_frames = self.page.locator('iframe[src*="recaptcha"]')
-            return await recaptcha_frames.count() > 0
+            # 檢查是否有未勾選的 checkbox
+            recaptcha_frame = self.page.frame_locator('iframe[src*="recaptcha/api2/anchor"]')
+            checkbox = recaptcha_frame.locator('.recaptcha-checkbox')
+            if await checkbox.is_visible(timeout=1000):
+                # 檢查 checkbox 是否已勾選
+                is_checked = await checkbox.get_attribute('aria-checked')
+                if is_checked != 'true':
+                    return True
+            
+            # 檢查是否有圖片挑戰
+            if await self._has_image_challenge():
+                return True
+                
+            return False
         except:
             return False
