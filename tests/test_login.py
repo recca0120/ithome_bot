@@ -31,11 +31,14 @@ async def test_user_can_login_to_ithome():
         assert automation.page is not None
         assert automation.browser is not None
         
-        # 驗證已導航到 ithelp.ithome.com.tw
-        # 登入/註冊按鈕點擊後可能會有頁面跳轉
+        # 驗證已導航到我的主頁
+        # 點擊我的主頁後應該會跳轉到使用者頁面
         await automation.page.wait_for_load_state("domcontentloaded")
         current_url = automation.page.url
         print(f"登入完成後的頁面: {current_url}")
+        
+        # 驗證是否在使用者主頁
+        assert "ithelp.ithome.com.tw/users" in current_url, f"應該要在使用者主頁，但目前在 {current_url}"
         
     finally:
         # Cleanup

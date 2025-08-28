@@ -54,6 +54,19 @@ class IThomeAutomation:
             login_register_button = self.page.locator('text=登入/註冊')
             await login_register_button.click()
             print(f"已點擊登入/註冊按鈕")
+            
+            # 等待頁面載入
+            await self.page.wait_for_load_state("domcontentloaded")
+            
+            # 點擊 #dLabel (使用者下拉選單) - 選擇 a 標籤的那個
+            dlabel_button = self.page.locator('a#dLabel')
+            await dlabel_button.click()
+            print(f"已點擊使用者下拉選單")
+            
+            # 點擊「我的主頁」
+            my_page_link = self.page.locator('text=我的主頁')
+            await my_page_link.click()
+            print(f"已點擊我的主頁")
 
             return True
         return False
