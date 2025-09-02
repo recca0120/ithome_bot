@@ -134,8 +134,8 @@ class ArticleBase:
         # 執行具體的提交動作（由子類實作）
         await self._perform_submit_action()
 
-        # 等待頁面跳轉（由子類決定排除模式）
-        return await self._wait_for_redirect(self._get_redirect_exclude_patterns())
+        # 等待頁面跳轉（由子類實作）
+        return await self._wait_for_submit_redirect()
     
     async def _perform_submit_action(self) -> None:
         """
@@ -143,14 +143,15 @@ class ArticleBase:
         """
         raise NotImplementedError("子類必須實作 _perform_submit_action 方法")
     
-    def _get_redirect_exclude_patterns(self) -> list:
+    async def _wait_for_submit_redirect(self) -> bool:
         """
-        取得跳轉時要排除的 URL 模式（子類可覆寫）
+        等待提交後的頁面跳轉（子類需要覆寫此方法）
         
         Returns:
-            list: 要排除的 URL 模式列表
+            bool: 是否成功跳轉
         """
-        return []
+        # 預設實作：等待任何頁面跳轉
+        return await self._wait_for_redirect()
 
     async def _wait_for_redirect(self, exclude_patterns: list = None, timeout: int = 15000) -> bool:
         """

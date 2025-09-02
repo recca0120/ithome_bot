@@ -81,9 +81,12 @@ class ArticleCreator(ArticleBase):
         await self._click_dropdown_toggle()
         await self._click_publish_button()
     
-    def _get_redirect_exclude_patterns(self) -> list:
-        """取得跳轉時要排除的 URL 模式"""
-        return ["/draft", "/create"]
+    async def _wait_for_submit_redirect(self) -> bool:
+        """等待發表後的頁面跳轉"""
+        return await self._wait_for_redirect(
+            exclude_patterns=["/draft", "/create"],
+            timeout=15000
+        )
 
     async def _click_dropdown_toggle(self) -> None:
         """點擊下拉選單觸發按鈕"""
