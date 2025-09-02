@@ -59,30 +59,16 @@ class ArticleUpdater(ArticleBase):
 
     async def _submit_update(self) -> bool:
         """提交更新"""
-        # 準備提交更新...
-
-        # 模擬人類行為：檢查內容後再提交的延遲
-        # await self.page.wait_for_timeout(random.randint(1500, 3000))
-
-        # 處理 reCAPTCHA（使用基類方法）
-        if not await self._handle_recaptcha():
-            return False
-
-        # 點擊更新按鈕
-        await self._click_update_button()
-
-        # 等待頁面跳轉
-        return await self._wait_for_redirect()
+        # 定義提交動作
+        submit_actions = [
+            self._click_update_button
+        ]
+        
+        # 使用基類的通用提交方法
+        return await self._submit_form(submit_actions, exclude_patterns=["/edit"])
 
     async def _click_update_button(self) -> None:
         """點擊更新按鈕"""
         await self.update_button.wait_for(state="visible", timeout=5000)
         await self.update_button.click()
         # 已點擊更新按鈕
-
-    async def _wait_for_redirect(self) -> bool:
-        """等待頁面跳轉（覆寫基類方法）"""
-        return await super()._wait_for_redirect(
-            exclude_patterns=["/edit"],
-            timeout=15000
-        )

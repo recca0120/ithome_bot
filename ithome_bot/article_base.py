@@ -115,6 +115,34 @@ class ArticleBase:
 
         return True
 
+    async def _submit_form(self, submit_actions: list = None, exclude_patterns: list = None) -> bool:
+        """
+        通用的表單提交方法
+
+        Args:
+            submit_actions: 提交前要執行的動作列表（async callable）
+            exclude_patterns: 跳轉時要排除的 URL 模式
+
+        Returns:
+            bool: 是否成功提交
+        """
+        # 準備提交...
+
+        # 模擬人類行為：檢查內容後再提交的延遲
+        # await self.page.wait_for_timeout(random.randint(1500, 3000))
+
+        # 處理 reCAPTCHA
+        if not await self._handle_recaptcha():
+            return False
+
+        # 執行提交動作
+        if submit_actions:
+            for action in submit_actions:
+                await action()
+
+        # 等待頁面跳轉
+        return await self._wait_for_redirect(exclude_patterns)
+
     async def _wait_for_redirect(self, exclude_patterns: list = None, timeout: int = 15000) -> bool:
         """
         等待頁面跳轉（共用方法）

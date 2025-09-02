@@ -78,23 +78,14 @@ class ArticleCreator(ArticleBase):
 
     async def _publish_article(self) -> bool:
         """發表文章"""
-        # 準備發表文章...
-
-        # 模擬人類行為：檢查內容後再提交的延遲
-        # await self.page.wait_for_timeout(random.randint(1500, 3000))
-
-        # 處理 reCAPTCHA（使用基類方法）
-        if not await self._handle_recaptcha():
-            return False
-
-        # 點擊下拉選單
-        await self._click_dropdown_toggle()
+        # 定義提交動作
+        submit_actions = [
+            self._click_dropdown_toggle,
+            self._click_publish_button
+        ]
         
-        # 點擊發表按鈕
-        await self._click_publish_button()
-
-        # 等待頁面跳轉
-        return await self._wait_for_redirect()
+        # 使用基類的通用提交方法
+        return await self._submit_form(submit_actions, exclude_patterns=["/draft", "/create"])
 
     async def _click_dropdown_toggle(self) -> None:
         """點擊下拉選單觸發按鈕"""
@@ -109,10 +100,3 @@ class ArticleCreator(ArticleBase):
         await self.publish_button.wait_for(state="visible", timeout=5000)
         await self.publish_button.click()
         # 已點擊發表按鈕
-
-    async def _wait_for_redirect(self) -> bool:
-        """等待頁面跳轉（覆寫基類方法）"""
-        return await super()._wait_for_redirect(
-            exclude_patterns=["/draft", "/create"],
-            timeout=15000
-        )
