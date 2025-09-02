@@ -3,7 +3,34 @@
 """
 import pytest
 from pathlib import Path
+from datetime import datetime
 
+
+
+@pytest.mark.asyncio
+async def test_create_article(client):
+    """測試建立鐵人賽文章"""
+    
+    # 讀取文章內容
+    description_file = Path(__file__).parent / "fixtures/day01-python-environment-setup.md"
+    with open(description_file, 'r', encoding='utf-8') as f:
+        description = f.read()
+    
+    # 設定文章資料 (使用時間戳記確保唯一標題)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    article_data = {
+        "subject": f"[Day 07] 測試文章 - {timestamp}",
+        "description": description
+    }
+    
+    # Python pytest TDD 實戰 系列的 category_id
+    category_id = "8446"
+    
+    # Act - 建立並發表文章
+    result = await client.create_article(category_id, article_data)
+    
+    # Assert - 驗證發表結果
+    assert result is True, "文章發表應該成功"
 
 
 @pytest.mark.asyncio

@@ -10,6 +10,7 @@ from playwright.async_api import Page
 
 from .authenticator import Authenticator
 from .article_updater import ArticleUpdater
+from .article_creator import ArticleCreator
 
 
 class Client:
@@ -42,6 +43,23 @@ class Client:
         login_success = await auth.login(account, password)
 
         return login_success
+
+    async def create_article(self, category_id: str, article_data: dict) -> bool:
+        """
+        建立新文章
+
+        Args:
+            category_id: 分類 ID（例如鐵人賽的分類）
+            article_data: 文章資料字典，包含:
+                - subject: 文章標題
+                - description: 文章內容
+
+        Returns:
+            bool: 是否建立成功
+        """
+        # 使用 ArticleCreator class 處理文章建立
+        creator = ArticleCreator(self.page)
+        return await creator.create(category_id, article_data)
 
     async def update_article(self, article_data: dict) -> bool:
         """
