@@ -23,13 +23,13 @@ class ArticleCreator(ArticleBase):
         self.dropdown_toggle = page.locator('.save-group__dropdown-toggle')
         self.publish_button = page.locator('#createSubmitBtn')
 
-    async def create(self, category_id: str, article_data: dict) -> bool:
+    async def create(self, article_data: dict) -> bool:
         """
         建立新文章（鐵人賽）
 
         Args:
-            category_id: 系列 ID（例如 "8446" 對應 Python pytest TDD 系列）
             article_data: 文章資料字典，包含:
+                - category_id: 系列 ID（例如 "8446" 對應 Python pytest TDD 系列）
                 - subject: 文章標題
                 - description: 文章內容
 
@@ -37,6 +37,7 @@ class ArticleCreator(ArticleBase):
             bool: 是否建立成功
         """
         # 從字典中取出參數
+        category_id = article_data['category_id']
         subject = article_data['subject']
         description = article_data['description']
         

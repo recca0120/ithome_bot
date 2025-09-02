@@ -44,13 +44,13 @@ class Client:
 
         return login_success
 
-    async def create_article(self, category_id: str, article_data: dict) -> bool:
+    async def create_article(self, article_data: dict) -> bool:
         """
         建立新文章
 
         Args:
-            category_id: 分類 ID（例如鐵人賽的分類）
             article_data: 文章資料字典，包含:
+                - category_id: 分類 ID（例如鐵人賽的分類）
                 - subject: 文章標題
                 - description: 文章內容
 
@@ -59,7 +59,7 @@ class Client:
         """
         # 使用 ArticleCreator class 處理文章建立
         creator = ArticleCreator(self.page)
-        return await creator.create(category_id, article_data)
+        return await creator.create(article_data)
 
     async def update_article(self, article_data: dict) -> bool:
         """

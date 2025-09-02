@@ -19,15 +19,13 @@ async def test_create_article(client):
     # 設定文章資料 (使用時間戳記確保唯一標題)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     article_data = {
+        "category_id": "8446",  # Python pytest TDD 實戰 系列
         "subject": f"[Day 07] 測試文章 - {timestamp}",
         "description": description
     }
     
-    # Python pytest TDD 實戰 系列的 category_id
-    category_id = "8446"
-    
     # Act - 建立並發表文章
-    result = await client.create_article(category_id, article_data)
+    result = await client.create_article(article_data)
     
     # Assert - 驗證發表結果
     assert result is True, "文章發表應該成功"
