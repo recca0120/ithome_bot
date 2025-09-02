@@ -115,14 +115,10 @@ class ArticleBase:
 
         return True
 
-    async def _submit_form(self, submit_actions: list = None, exclude_patterns: list = None) -> bool:
+    async def _submit(self) -> bool:
         """
-        通用的表單提交方法
-
-        Args:
-            submit_actions: 提交前要執行的動作列表（async callable）
-            exclude_patterns: 跳轉時要排除的 URL 模式
-
+        模板方法：提交表單的通用流程
+        
         Returns:
             bool: 是否成功提交
         """
@@ -135,13 +131,26 @@ class ArticleBase:
         if not await self._handle_recaptcha():
             return False
 
-        # 執行提交動作
-        if submit_actions:
-            for action in submit_actions:
-                await action()
+        # 執行具體的提交動作（由子類實作）
+        await self._perform_submit_action()
 
-        # 等待頁面跳轉
-        return await self._wait_for_redirect(exclude_patterns)
+        # 等待頁面跳轉（由子類決定排除模式）
+        return await self._wait_for_redirect(self._get_redirect_exclude_patterns())
+    
+    async def _perform_submit_action(self) -> None:
+        """
+        執行具體的提交動作（子類需要覆寫此方法）
+        """
+        raise NotImplementedError("子類必須實作 _perform_submit_action 方法")
+    
+    def _get_redirect_exclude_patterns(self) -> list:
+        """
+        取得跳轉時要排除的 URL 模式（子類可覆寫）
+        
+        Returns:
+            list: 要排除的 URL 模式列表
+        """
+        return []
 
     async def _wait_for_redirect(self, exclude_patterns: list = None, timeout: int = 15000) -> bool:
         """

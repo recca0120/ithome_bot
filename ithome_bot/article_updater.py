@@ -57,15 +57,13 @@ class ArticleUpdater(ArticleBase):
         await self.page.goto(edit_url)
         # 已導航到文章編輯頁面: {edit_url}
 
-    async def _submit(self) -> bool:
-        """提交更新"""
-        # 定義提交動作
-        submit_actions = [
-            self._click_update_button
-        ]
-        
-        # 使用基類的通用提交方法
-        return await self._submit_form(submit_actions, exclude_patterns=["/edit"])
+    async def _perform_submit_action(self) -> None:
+        """實作具體的提交動作：點擊更新按鈕"""
+        await self._click_update_button()
+    
+    def _get_redirect_exclude_patterns(self) -> list:
+        """取得跳轉時要排除的 URL 模式"""
+        return ["/edit"]
 
     async def _click_update_button(self) -> None:
         """點擊更新按鈕"""

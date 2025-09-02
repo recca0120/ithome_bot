@@ -76,16 +76,14 @@ class ArticleCreator(ArticleBase):
         await series_link.click()
         # 已選擇系列: {category_id}
 
-    async def _submit(self) -> bool:
-        """提交文章"""
-        # 定義提交動作
-        submit_actions = [
-            self._click_dropdown_toggle,
-            self._click_publish_button
-        ]
-        
-        # 使用基類的通用提交方法
-        return await self._submit_form(submit_actions, exclude_patterns=["/draft", "/create"])
+    async def _perform_submit_action(self) -> None:
+        """實作具體的提交動作：點擊下拉選單後發表"""
+        await self._click_dropdown_toggle()
+        await self._click_publish_button()
+    
+    def _get_redirect_exclude_patterns(self) -> list:
+        """取得跳轉時要排除的 URL 模式"""
+        return ["/draft", "/create"]
 
     async def _click_dropdown_toggle(self) -> None:
         """點擊下拉選單觸發按鈕"""
