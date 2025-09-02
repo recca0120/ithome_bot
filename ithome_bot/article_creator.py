@@ -56,18 +56,27 @@ class ArticleCreator(ArticleBase):
 
     async def _navigate_to_create_page(self, category_id: str) -> None:
         """導航到文章建立頁面"""
-        # 點擊鐵人發文按鈕
+        # 開啟鐵人發文選單
+        await self._open_ironman_menu()
+        
+        # 選擇指定系列
+        await self._select_series_from_modal(category_id)
+        
+        # 已導航到文章建立頁面
+    
+    async def _open_ironman_menu(self) -> None:
+        """開啟鐵人發文選單"""
         await self.ironman_button.wait_for(state="visible", timeout=5000)
         await self.ironman_button.click()
         
         # 等待系列選擇 modal 顯示
         await self.series_modal.wait_for(state="visible", timeout=5000)
-        
-        # 選擇特定系列
+    
+    async def _select_series_from_modal(self, category_id: str) -> None:
+        """從 modal 中選擇指定系列"""
         series_link = self.page.locator(f'a[href*="/2025ironman/create/{category_id}"]')
         await series_link.wait_for(state="visible", timeout=5000)
         await series_link.click()
-        # 已導航到文章建立頁面
 
     async def _perform_submit_action(self) -> None:
         """實作具體的提交動作：點擊下拉選單後發表"""
