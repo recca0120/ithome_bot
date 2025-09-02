@@ -20,10 +20,6 @@ class ArticleUpdater(ArticleBase):
         # 初始化特有的 locators
         self.update_button = page.locator('#updateSubmitBtn')
 
-    async def execute(self, article_data: dict) -> bool:
-        """實作抽象方法 - 執行更新文章"""
-        return await self.update(article_data)
-
     async def update(self, article_data: dict) -> bool:
         """
         更新文章內容

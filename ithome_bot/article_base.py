@@ -1,14 +1,13 @@
 """
 文章操作基類模組
 """
-from abc import ABC, abstractmethod
 from playwright.async_api import Page
 
 from .recaptcha import ReCaptcha
 
 
-class ArticleBase(ABC):
-    """文章操作抽象基類"""
+class ArticleBase:
+    """文章操作基類"""
 
     def __init__(self, page: Page):
         """
@@ -140,13 +139,3 @@ class ArticleBase(ABC):
         except:
             # 跳轉狀態未知
             return False
-
-    @abstractmethod
-    async def execute(self, *args, **kwargs) -> bool:
-        """
-        執行文章操作（子類必須實作）
-
-        Returns:
-            bool: 操作是否成功
-        """
-        pass

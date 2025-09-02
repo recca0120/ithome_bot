@@ -23,10 +23,6 @@ class ArticleCreator(ArticleBase):
         self.dropdown_toggle = page.locator('.save-group__dropdown-toggle')
         self.publish_button = page.locator('#createSubmitBtn')
 
-    async def execute(self, category_id: str, article_data: dict) -> bool:
-        """實作抽象方法 - 執行建立文章"""
-        return await self.create(category_id, article_data)
-
     async def create(self, category_id: str, article_data: dict) -> bool:
         """
         建立新文章（鐵人賽）
