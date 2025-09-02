@@ -49,7 +49,7 @@ class ArticleUpdater(ArticleBase):
         await self._set_description(description, clear_first=True)
 
         # 提交更新
-        return await self._submit_update()
+        return await self._submit()
 
     async def _navigate_to_edit_page(self, article_id: str) -> None:
         """導航到文章編輯頁面"""
@@ -57,7 +57,7 @@ class ArticleUpdater(ArticleBase):
         await self.page.goto(edit_url)
         # 已導航到文章編輯頁面: {edit_url}
 
-    async def _submit_update(self) -> bool:
+    async def _submit(self) -> bool:
         """提交更新"""
         # 定義提交動作
         submit_actions = [

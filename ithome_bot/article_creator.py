@@ -55,8 +55,8 @@ class ArticleCreator(ArticleBase):
         await self._set_subject(subject)
         await self._set_description(description)
 
-        # 發表文章
-        return await self._publish_article()
+        # 提交文章
+        return await self._submit()
 
     async def _click_ironman_post_button(self) -> None:
         """點擊鐵人發文按鈕"""
@@ -76,8 +76,8 @@ class ArticleCreator(ArticleBase):
         await series_link.click()
         # 已選擇系列: {category_id}
 
-    async def _publish_article(self) -> bool:
-        """發表文章"""
+    async def _submit(self) -> bool:
+        """提交文章"""
         # 定義提交動作
         submit_actions = [
             self._click_dropdown_toggle,
