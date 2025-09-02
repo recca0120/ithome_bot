@@ -79,7 +79,7 @@ class ArticleCreator(ArticleBase):
     async def _perform_submit_action(self) -> None:
         """實作具體的提交動作：點擊下拉選單後發表"""
         await self._click_dropdown_toggle()
-        await self._click_publish_button()
+        await self._click_submit_button()
     
     async def _wait_for_submit_redirect(self) -> bool:
         """等待發表後的頁面跳轉"""
@@ -96,8 +96,8 @@ class ArticleCreator(ArticleBase):
         await self.page.wait_for_timeout(500)
         # 已展開下拉選單
 
-    async def _click_publish_button(self) -> None:
-        """點擊發表按鈕"""
+    async def _click_submit_button(self) -> None:
+        """點擊提交按鈕（發表）"""
         await self.publish_button.wait_for(state="visible", timeout=5000)
         await self.publish_button.click()
         # 已點擊發表按鈕

@@ -59,7 +59,7 @@ class ArticleUpdater(ArticleBase):
 
     async def _perform_submit_action(self) -> None:
         """實作具體的提交動作：點擊更新按鈕"""
-        await self._click_update_button()
+        await self._click_submit_button()
     
     async def _wait_for_submit_redirect(self) -> bool:
         """等待更新後的頁面跳轉"""
@@ -68,8 +68,8 @@ class ArticleUpdater(ArticleBase):
             timeout=15000
         )
 
-    async def _click_update_button(self) -> None:
-        """點擊更新按鈕"""
+    async def _click_submit_button(self) -> None:
+        """點擊提交按鈕（更新）"""
         await self.update_button.wait_for(state="visible", timeout=5000)
         await self.update_button.click()
         # 已點擊更新按鈕
