@@ -41,12 +41,8 @@ class ArticleCreator(ArticleBase):
         subject = article_data['subject']
         description = article_data['description']
         
-        # 點擊鐵人發文按鈕
-        await self._click_ironman_post_button()
-        
-        # 等待並選擇系列
-        await self._wait_for_series_modal()
-        await self._select_series(category_id)
+        # 導航到建立頁面
+        await self._navigate_to_create_page(category_id)
 
         # 等待頁面載入
         await self.page.wait_for_load_state("domcontentloaded")
@@ -58,23 +54,20 @@ class ArticleCreator(ArticleBase):
         # 提交文章
         return await self._submit()
 
-    async def _click_ironman_post_button(self) -> None:
-        """點擊鐵人發文按鈕"""
+    async def _navigate_to_create_page(self, category_id: str) -> None:
+        """導航到文章建立頁面"""
+        # 點擊鐵人發文按鈕
         await self.ironman_button.wait_for(state="visible", timeout=5000)
         await self.ironman_button.click()
-        # 已點擊鐵人發文按鈕
-
-    async def _wait_for_series_modal(self) -> None:
-        """等待系列選擇 modal 顯示"""
+        
+        # 等待系列選擇 modal 顯示
         await self.series_modal.wait_for(state="visible", timeout=5000)
-        # 系列選擇 modal 已顯示
-
-    async def _select_series(self, category_id: str) -> None:
-        """選擇特定系列"""
+        
+        # 選擇特定系列
         series_link = self.page.locator(f'a[href*="/2025ironman/create/{category_id}"]')
         await series_link.wait_for(state="visible", timeout=5000)
         await series_link.click()
-        # 已選擇系列: {category_id}
+        # 已導航到文章建立頁面
 
     async def _perform_submit_action(self) -> None:
         """實作具體的提交動作：點擊下拉選單後發表"""
