@@ -1,13 +1,14 @@
 """
 文章操作基類模組
 """
+from abc import ABC, abstractmethod
 from playwright.async_api import Page
 
 from .recaptcha import ReCaptcha
 
 
-class ArticleBase:
-    """文章操作基類"""
+class ArticleBase(ABC):
+    """文章操作基類（抽象類別）"""
 
     def __init__(self, page: Page):
         """
@@ -62,41 +63,55 @@ class ArticleBase:
 
         # SimpleMDE 編輯器需要特殊處理
         if clear_first:
-            # 先清空內容
-            await self.page.evaluate("""
-                () => {
-                    const textarea = document.querySelector('textarea[name="description"]');
-                    const simplemde = $(textarea).data('simplemde');
-                    
-                    if (simplemde) {
-                        simplemde.value('');
-                    } else {
-                        textarea.value = '';
-                    }
-                }
-            """)
+            await self._clear_simplemde_content()
             await self.page.wait_for_timeout(300)
 
         # 設定新內容
+        await self._set_simplemde_content(description)
+
+        # 等待內容設定完成
+        await self.page.wait_for_timeout(1000)
+        # 已設定文章內容
+    
+    async def _clear_simplemde_content(self) -> None:
+        """
+        清空SimpleMDE 編輯器內容
+        """
         await self.page.evaluate("""
-            (description) => {
+            () => {
+                const textarea = document.querySelector('textarea[name="description"]');
+                const simplemde = $(textarea).data('simplemde');
+                
+                if (simplemde) {
+                    simplemde.value('');
+                } else {
+                    textarea.value = '';
+                }
+            }
+        """)
+    
+    async def _set_simplemde_content(self, content: str) -> None:
+        """
+        設定SimpleMDE 編輯器內容
+        
+        Args:
+            content: 要設定的內容
+        """
+        await self.page.evaluate("""
+            (content) => {
                 const textarea = document.querySelector('textarea[name="description"]');
                 const simplemde = $(textarea).data('simplemde');
 
                 // 設定內容
                 setTimeout(() => {
                     if (simplemde) {
-                        simplemde.value(description);
+                        simplemde.value(content);
                     } else {
-                        textarea.value = description;
+                        textarea.value = content;
                     }
                 }, 300);
             }
-        """, description)
-
-        # 等待內容設定完成
-        await self.page.wait_for_timeout(1000)
-        # 已設定文章內容
+        """, content)
 
     async def _handle_recaptcha(self) -> bool:
         """
@@ -137,21 +152,22 @@ class ArticleBase:
         # 等待頁面跳轉（由子類實作）
         return await self._wait_for_submit_redirect()
     
+    @abstractmethod
     async def _perform_submit_action(self) -> None:
         """
-        執行具體的提交動作（子類需要覆寫此方法）
+        執行具體的提交動作（子類必須實作此方法）
         """
-        raise NotImplementedError("子類必須實作 _perform_submit_action 方法")
+        pass
     
+    @abstractmethod
     async def _wait_for_submit_redirect(self) -> bool:
         """
-        等待提交後的頁面跳轉（子類需要覆寫此方法）
+        等待提交後的頁面跳轉（子類必須實作此方法）
         
         Returns:
             bool: 是否成功跳轉
         """
-        # 預設實作：等待任何頁面跳轉
-        return await self._wait_for_redirect()
+        pass
 
     async def _wait_for_redirect(self, exclude_patterns: list = None, timeout: int = 15000) -> bool:
         """
