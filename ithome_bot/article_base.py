@@ -85,14 +85,11 @@ class ArticleBase(ABC):
                 const textarea = document.querySelector('textarea[name="description"]');
                 const simplemde = $(textarea).data('simplemde');
                 
-                // 設定內容
-                setTimeout(() => {
-                    if (simplemde) {
-                        simplemde.value(content);
-                    } else {
-                        textarea.value = content;
-                    }
-                }, 300);
+                if (simplemde) {
+                    simplemde.value(content);
+                } else {
+                    textarea.value = content;
+                }
             }
         """, content)
 
