@@ -20,8 +20,6 @@ class ArticleBase(ABC):
         self.page = page
         # 共用的 locators
         self.subject_input = page.locator('input[name="subject"]')
-        # SimpleMDE 編輯器選擇器
-        self._description_selector = 'textarea[name="description"]'
 
     async def _set_subject(self, subject: str, clear_first: bool = False) -> None:
         """
@@ -69,46 +67,34 @@ class ArticleBase(ABC):
             await self.page.wait_for_timeout(300)
 
         # 設定新內容
-        await self._update_simplemde_content(description, use_timeout=True)
+        await self._update_simplemde_content(description)
 
         # 等待內容設定完成
         await self.page.wait_for_timeout(1000)
         # 已設定文章內容
     
-    async def _update_simplemde_content(self, content: str, use_timeout: bool = False) -> None:
+    async def _update_simplemde_content(self, content: str) -> None:
         """
         更新 SimpleMDE 編輯器內容
         
         Args:
             content: 要設定的內容（空字串表示清空）
-            use_timeout: 是否使用延遲設定（用於新內容設定）
         """
-        js_code = f"""
-            ({{content, selector, useTimeout}}) => {{
-                const textarea = document.querySelector(selector);
+        await self.page.evaluate("""
+            (content) => {
+                const textarea = document.querySelector('textarea[name="description"]');
                 const simplemde = $(textarea).data('simplemde');
                 
-                const setValue = () => {{
-                    if (simplemde) {{
+                // 設定內容
+                setTimeout(() => {
+                    if (simplemde) {
                         simplemde.value(content);
-                    }} else {{
+                    } else {
                         textarea.value = content;
-                    }}
-                }};
-                
-                if (useTimeout) {{
-                    setTimeout(setValue, 300);
-                }} else {{
-                    setValue();
-                }}
-            }}
-        """
-        
-        await self.page.evaluate(js_code, {
-            'content': content,
-            'selector': self._description_selector,
-            'useTimeout': use_timeout
-        })
+                    }
+                }, 300);
+            }
+        """, content)
 
     async def _handle_recaptcha(self) -> bool:
         """
