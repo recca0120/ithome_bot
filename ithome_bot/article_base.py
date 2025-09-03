@@ -85,9 +85,11 @@ class ArticleBase(ABC):
                 const textarea = document.querySelector('textarea[name="description"]');
                 const simplemde = $(textarea).data('simplemde');
                 
+                // 優先使用 SimpleMDE API，它會自動同步到 textarea
                 if (simplemde) {
                     simplemde.value(content);
                 } else {
+                    // 如果 SimpleMDE 不存在，直接設定 textarea
                     textarea.value = content;
                 }
             }
