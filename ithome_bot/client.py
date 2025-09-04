@@ -44,7 +44,7 @@ class Client:
 
         return login_success
 
-    async def create_article(self, article_data: dict) -> bool:
+    async def create_article(self, article_data: dict) -> str | None:
         """
         建立新文章
 
@@ -55,13 +55,13 @@ class Client:
                 - description: 文章內容
 
         Returns:
-            bool: 是否建立成功
+            str | None: 成功時回傳 article_id，失敗時回傳 None
         """
         # 使用 ArticleCreator class 處理文章建立
         creator = ArticleCreator(self.page)
         return await creator.create(article_data)
 
-    async def update_article(self, article_data: dict) -> bool:
+    async def update_article(self, article_data: dict) -> str | None:
         """
         更新文章內容
 
@@ -72,7 +72,7 @@ class Client:
                 - description: 文章內容
 
         Returns:
-            bool: 是否更新成功
+            str | None: 成功時回傳 article_id，失敗時回傳 None
         """
         # 使用 ArticleUpdater class 處理文章更新
         updater = ArticleUpdater(self.page)

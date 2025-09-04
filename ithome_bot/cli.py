@@ -92,14 +92,14 @@ async def update_article_with_bot(
             "description": description
         }
         
-        success = await client.update_article(article_data)
+        result = await client.update_article(article_data)
         
-        if success:
-            click.echo("✅ 文章更新成功!")
+        if result:
+            click.echo(f"✅ 文章更新成功! (文章 ID: {result})")
         else:
             click.echo("❌ 文章更新失敗")
         
-        return success
+        return result is not None
         
     finally:
         await browser.close()

@@ -1,6 +1,7 @@
 """
 文章操作基類模組
 """
+import re
 from abc import ABC, abstractmethod
 from playwright.async_api import Page
 
@@ -112,12 +113,12 @@ class ArticleBase(ABC):
 
         return True
 
-    async def _submit(self) -> bool:
+    async def _submit(self) -> str | None:
         """
         模板方法：提交表單的通用流程
         
         Returns:
-            bool: 是否成功提交
+            str | None: 成功時回傳 article_id，失敗時回傳 None
         """
         # 準備提交...
 
@@ -126,13 +127,17 @@ class ArticleBase(ABC):
 
         # 處理 reCAPTCHA
         if not await self._handle_recaptcha():
-            return False
+            return None
 
         # 執行具體的提交動作（由子類實作）
         await self._perform_submit_action()
 
         # 等待頁面跳轉（由子類實作）
-        return await self._wait_for_submit_redirect()
+        if await self._wait_for_submit_redirect():
+            # 從 URL 中提取 article_id
+            return self._extract_article_id_from_url()
+        
+        return None
     
     @abstractmethod
     async def _perform_submit_action(self) -> None:
@@ -175,3 +180,17 @@ class ArticleBase(ABC):
         except:
             # 跳轉狀態未知
             return False
+    
+    def _extract_article_id_from_url(self) -> str | None:
+        """
+        從當前 URL 中提取文章 ID
+        
+        Returns:
+            str | None: 文章 ID，若無法提取則回傳 None
+        """
+        current_url = self.page.url
+        # 匹配 /articles/{article_id} 的模式
+        match = re.search(r'/articles/(\d+)', current_url)
+        if match:
+            return match.group(1)
+        return None

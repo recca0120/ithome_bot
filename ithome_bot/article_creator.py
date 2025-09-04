@@ -23,7 +23,7 @@ class ArticleCreator(ArticleBase):
         self.dropdown_toggle = page.locator('.save-group__dropdown-toggle')
         self.publish_button = page.locator('#createSubmitBtn')
 
-    async def create(self, article_data: dict) -> bool:
+    async def create(self, article_data: dict) -> str | None:
         """
         建立新文章（鐵人賽）
 
@@ -34,7 +34,7 @@ class ArticleCreator(ArticleBase):
                 - description: 文章內容
 
         Returns:
-            bool: 是否建立成功
+            str | None: 成功時回傳 article_id，失敗時回傳 None
         """
         # 從字典中取出參數
         category_id = article_data['category_id']

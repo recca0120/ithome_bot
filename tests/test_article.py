@@ -28,7 +28,9 @@ async def test_create_article(client):
     result = await client.create_article(article_data)
     
     # Assert - 驗證發表結果
-    assert result is True, "文章發表應該成功"
+    assert result is not None, "文章發表應該成功"
+    assert isinstance(result, str), "應該回傳文章 ID"
+    assert result.isdigit(), "文章 ID 應該是數字字串"
 
 
 @pytest.mark.asyncio
@@ -51,4 +53,5 @@ async def test_update_article(client):
     result = await client.update_article(article_data)
 
     # Assert - 驗證更新結果
-    assert result is True, "文章更新應該成功"
+    assert result is not None, "文章更新應該成功"
+    assert result == "10376177", "應該回傳正確的文章 ID"
