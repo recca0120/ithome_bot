@@ -97,14 +97,24 @@ async def update_my_article():
         # 登入
         await client.login("account", "password")
         
-        # 更新文章
+        # 更新文章（tags 選填，會另外加上去，不會清掉既有的 tag）
         article_data = {
             "article_id": "10376177",
             "subject": "文章標題",
-            "description": "文章內容..."
+            "description": "文章內容...",
+            "tags": ["PHP", "TDD"]
         }
         success = await client.update_article(article_data)
-        
+
+        # 建立新文章（鐵人賽），category_id 是系列 ID
+        article_data = {
+            "category_id": "8446",
+            "subject": "文章標題",
+            "description": "文章內容...",
+            "tags": ["PHP", "TDD"]
+        }
+        article_id = await client.create_article(article_data)
+
     finally:
         await browser.close()
         await playwright.stop()
@@ -112,6 +122,10 @@ async def update_my_article():
 # 執行
 asyncio.run(update_my_article())
 ```
+
+`tags` 是選填欄位，`create_article`／`update_article` 都支援；沒有帶
+`tags` 就完全不動 tag 欄位。目前的 CLI（`ithome-bot` 指令）沒有開放
+`--tags` 參數，只能透過程式化呼叫使用。
 
 ### 複製到其他專案
 
