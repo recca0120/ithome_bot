@@ -4,10 +4,10 @@ iThome 鐵人賽文章更新自動化工具
 
 ## 功能特點
 
-- 🤖 自動化登入 iThome 網站
-- 📝 批量更新鐵人賽文章
-- 🍪 自動儲存和載入 cookies
-- 🔐 安全的密碼處理（支援環境變數）
+- 🤖 自動化登入 iThome 網站，支援 cookies 持久化（含記住我自動續期）
+- 📝 建立/更新鐵人賽文章，支援 tag
+- 📄 從標準格式的 markdown 檔案讀取文章（`Article` 值物件 + `markdown_parser`）
+- 🔐 安全的密碼處理（支援環境變數），可在 GitHub Actions 這類無人值守環境跑
 - 🎯 簡單易用的命令列介面
 
 ## 安裝方式
@@ -16,8 +16,8 @@ iThome 鐵人賽文章更新自動化工具
 
 ```bash
 # Clone 專案
-git clone https://github.com/yourusername/ironman-bot.git
-cd ironman-bot
+git clone https://github.com/recca0120/ithome_bot.git
+cd ithome_bot
 
 # 安裝 package（開發模式）
 pip install -e .
@@ -54,7 +54,8 @@ ITHOME_ACCOUNT=your_account
 ITHOME_PASSWORD=your_password
 ```
 
-還有兩個選填的環境變數，主要給 CI 這類無人值守的環境用：
+還有兩個選填的環境變數，主要給 CI 這類無人值守的環境用（詳見下面
+「在 GitHub Actions 上跑」）：
 
 - `ITHOME_HEADLESS=true`：CLI 用 headless 模式啟動瀏覽器（預設 `false`）。
   headless 模式沒辦法手動處理 reCAPTCHA，只適合搭配已經有效的 cookies 使用。
@@ -63,7 +64,7 @@ ITHOME_PASSWORD=your_password
   檔案本身，`save_cookies()` 存出來的 base64 字串）。適合把 `cookies.txt`
   的內容存成 CI 的 Secret，不用在 CI 裡重新登入一次。
 
-### 執行命令
+### 執行命令（CLI）
 
 ```bash
 # 基本用法
@@ -76,7 +77,12 @@ ithome-bot 10376177 "Day 01 Python 環境設置" day01.md
 ithome-bot 10376177 "Day 01 標題" day01.md --account myaccount --password mypass
 ```
 
-### 參數說明
+CLI 只能**更新**既有文章、不支援 tag、也不吃 markdown 標準格式的
+frontmatter（`description_file` 的全部內容會直接當成文章內文）。要用
+tag、要建立新文章、或要從標準格式的 markdown 檔案讀取，請走下面「作為
+Python 模組使用」。
+
+#### 參數說明
 
 - `article_id`: iThome 文章 ID（必填）
 - `subject`: 文章標題（必填）
@@ -98,14 +104,14 @@ async def update_my_article():
     playwright = await async_playwright().start()
     browser = await playwright.webkit.launch(headless=False)
     page = await browser.new_page()
-    
+
     try:
         # 建立 Client 實例
         client = Client(page)
-        
+
         # 登入
         await client.login("account", "password")
-        
+
         # 更新文章（tags 選填，會另外加上去，不會清掉既有的 tag）
         article_data = {
             "article_id": "10376177",
@@ -135,6 +141,13 @@ asyncio.run(update_my_article())
 `tags` 是選填欄位，`create_article`／`update_article` 都支援；沒有帶
 `tags` 就完全不動 tag 欄位。目前的 CLI（`ithome-bot` 指令）沒有開放
 `--tags` 參數，只能透過程式化呼叫使用。
+
+**tag 數量上限是 5 個，包含鐵人賽自動掛的那個**（例如「18th鐵人賽」）。
+超過會讓表單**靜默失敗**——不跳錯誤、不導頁，`create_article`/
+`update_article` 直接回傳 `None`，很容易被誤判成其他原因失敗。所以
+自訂 tag 最多只能下 4 個。這是實測出來的網站行為，不是這個套件自己的
+限制，`_set_tags()` 會在超過時直接拋 `ValueError`，不會送出注定失敗的
+表單。
 
 ### 從標準格式的 markdown 檔案讀取文章
 
@@ -169,7 +182,7 @@ author: recca0120
 | 欄位 | 必要？ | 誰負責寫 | 說明 |
 |---|---|---|---|
 | `title` | 必要 | 人工 | 文章標題，對應 `Article.subject` |
-| `tags` | 選填 | 人工 | flow style `[a, b, c]`，不支援多行 block style |
+| `tags` | 選填 | 人工 | flow style `[a, b, c]`，不支援多行 block style；上限見上面「tag 數量上限」 |
 | `draft` | 選填，預設 `false` | 人工 | `true` 代表「還沒要自動發表」；這個模組本身不會主動略過，是呼叫端（例如自動發文流程）自己要檢查 |
 | `date` | 選填 | **自動回填** | 最後一次成功發表/更新的時間 |
 | `permalink` | 選填 | **自動回填** | 發表成功後的實際文章網址，從 `article_id` 組出來 |
@@ -264,6 +277,7 @@ reCAPTCHA。續期後記得呼叫 `save_cookies()`，並視需要把新內容寫
 2. 登入成功後會自動儲存 cookies，下次執行時會自動載入
 3. cookies 檔案會儲存在專案根目錄的 `cookies.txt`
 4. 請勿將含有帳密的 `.env` 檔案提交到版本控制系統
+5. 自訂 tag 最多 4 個（見上面「tag 數量上限」），超過會被 `ValueError` 擋下來
 
 ## License
 
@@ -271,7 +285,7 @@ MIT License
 
 ## 作者
 
-Your Name
+[recca0120](https://github.com/recca0120)
 
 ## 貢獻
 
