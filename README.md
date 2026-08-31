@@ -54,6 +54,15 @@ ITHOME_ACCOUNT=your_account
 ITHOME_PASSWORD=your_password
 ```
 
+還有兩個選填的環境變數，主要給 CI 這類無人值守的環境用：
+
+- `ITHOME_HEADLESS=true`：CLI 用 headless 模式啟動瀏覽器（預設 `false`）。
+  headless 模式沒辦法手動處理 reCAPTCHA，只適合搭配已經有效的 cookies 使用。
+- `ITHOME_COOKIES`：`cookies.txt` 不存在時，`Client.load_cookies()` 會
+  改讀這個環境變數的內容寫成 `cookies.txt`（內容就是 `cookies.txt`
+  檔案本身，`save_cookies()` 存出來的 base64 字串）。適合把 `cookies.txt`
+  的內容存成 CI 的 Secret，不用在 CI 裡重新登入一次。
+
 ### 執行命令
 
 ```bash
