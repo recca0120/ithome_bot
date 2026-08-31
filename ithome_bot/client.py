@@ -9,6 +9,7 @@ from pathlib import Path
 
 from playwright.async_api import Page
 
+from .article import Article
 from .authenticator import Authenticator
 from .article_updater import ArticleUpdater
 from .article_creator import ArticleCreator
@@ -45,36 +46,46 @@ class Client:
 
         return login_success
 
-    async def create_article(self, article_data: dict) -> str | None:
+    async def create_article(self, article_data: dict | Article) -> str | None:
         """
         建立新文章
 
         Args:
-            article_data: 文章資料字典，包含:
+            article_data: 文章資料，dict 或 Article 物件都可以（Article 通常
+                來自 markdown_parser 這類 parser 的輸出）。dict 格式包含:
                 - category_id: 分類 ID（例如鐵人賽的分類）
                 - subject: 文章標題
                 - description: 文章內容
+                - tags: 選填，要另外加上的自訂 tag 清單
 
         Returns:
             str | None: 成功時回傳 article_id，失敗時回傳 None
         """
+        if isinstance(article_data, Article):
+            article_data = article_data.to_dict()
         # 使用 ArticleCreator class 處理文章建立
         creator = ArticleCreator(self.page)
         return await creator.create(article_data)
 
-    async def update_article(self, article_data: dict) -> str | None:
+    async def update_article(self, article_data: dict | Article) -> str | None:
         """
         更新文章內容
 
         Args:
-            article_data: 文章資料字典，包含:
+            article_data: 文章資料，dict 或 Article 物件都可以（Article 通常
+                來自 markdown_parser 這類 parser 的輸出，記得設定
+                article_id，否則轉成 dict 後會缺這個必要欄位）。dict 格式
+                包含:
                 - article_id: 文章 ID
                 - subject: 文章標題
                 - description: 文章內容
+                - tags: 選填，要另外加上的自訂 tag 清單
 
         Returns:
             str | None: 成功時回傳 article_id，失敗時回傳 None
         """
+        if isinstance(article_data, Article):
+            article_data = article_data.to_dict()
         # 使用 ArticleUpdater class 處理文章更新
         updater = ArticleUpdater(self.page)
         return await updater.update(article_data)

@@ -136,6 +136,113 @@ asyncio.run(update_my_article())
 `tags` 就完全不動 tag 欄位。目前的 CLI（`ithome-bot` 指令）沒有開放
 `--tags` 參數，只能透過程式化呼叫使用。
 
+### 從標準格式的 markdown 檔案讀取文章
+
+`create_article`／`update_article` 除了上面的 dict，也接受 `Article`
+物件——`markdown_parser` 會把符合標準格式的 markdown 檔案解析成
+`Article`，不用自己動手拆欄位：
+
+```python
+from ithome_bot.markdown_parser import parse_markdown_file
+
+article = parse_markdown_file("day01.md")
+article.category_id = "8446"  # 建立新文章才需要；更新的話設定 article_id
+article_id = await client.create_article(article)
+```
+
+#### markdown 標準格式
+
+欄位名對齊常見 SSG（Jekyll/Hugo）慣例，只有 `title` 是必要欄位：
+
+```markdown
+---
+title: Day 01：標題
+tags: [PHP, AI, Legacy]
+draft: false
+date: 2026-08-31T15:00:00+08:00
+permalink: https://ithelp.ithome.com.tw/articles/10406474
+author: recca0120
+---
+內文從這裡開始，不用再重複標題...
+```
+
+| 欄位 | 必要？ | 誰負責寫 | 說明 |
+|---|---|---|---|
+| `title` | 必要 | 人工 | 文章標題，對應 `Article.subject` |
+| `tags` | 選填 | 人工 | flow style `[a, b, c]`，不支援多行 block style |
+| `draft` | 選填，預設 `false` | 人工 | `true` 代表「還沒要自動發表」；這個模組本身不會主動略過，是呼叫端（例如自動發文流程）自己要檢查 |
+| `date` | 選填 | **自動回填** | 最後一次成功發表/更新的時間 |
+| `permalink` | 選填 | **自動回填** | 發表成功後的實際文章網址，從 `article_id` 組出來 |
+| `author` | 選填 | **自動回填** | 發表/更新時實際使用的 iThome 帳號 |
+
+`date`／`permalink`／`author` 不需要人工先寫，是發表流程用
+`update_frontmatter()` 寫回去的（見下面「發表後自動回填 metadata」）。
+這三個欄位**不會**送給 iThome（`Article.to_dict()` 不包含它們），純粹
+是寫在檔案裡給人看、給自動化流程追蹤用的本地 metadata。
+
+也可以直接用 `parse_markdown(text)` 解析已經讀進記憶體的字串，不一定要
+是檔案。frontmatter 缺少 `title`、或整份檔案沒有 frontmatter，會拋
+`ValueError`。
+
+#### 發表後自動回填 metadata
+
+`update_frontmatter(text, **fields)` 把指定欄位寫進（或覆蓋）frontmatter，
+其他欄位跟 body 都不動，用來在發表成功後把 `date`/`permalink`/`author`
+回填進原始檔案：
+
+```python
+from ithome_bot.markdown_parser import update_frontmatter
+
+article_id = await client.create_article(article)
+if article_id:
+    original_text = Path("day01.md").read_text(encoding="utf-8")
+    new_text = update_frontmatter(
+        original_text,
+        date="2026-08-31T15:00:00+08:00",
+        permalink=f"https://ithelp.ithome.com.tw/articles/{article_id}",
+        author="recca0120",
+    )
+    Path("day01.md").write_text(new_text, encoding="utf-8")
+```
+
+這三個欄位不影響內容比對（例如拿來判斷「內容有沒有變、要不要重新發表」
+的邏輯通常只看 `subject`/`description`/`tags`），回填不會造成下次執行
+誤判成「內容變了」而重複發文。
+
+### 在 GitHub Actions 上跑（無人值守）
+
+CLI/`Client` 都能在 headless、沒有人看畫面的環境下跑，前提是已經有
+有效的 cookies（headless 模式沒辦法手動處理 reCAPTCHA）：
+
+1. 先在本機（能看到畫面）跑過一次真的登入，產生 `cookies.txt`
+2. 把 `cookies.txt` 的內容存成 Secret：
+   `gh secret set ITHOME_COOKIES < cookies.txt`
+3. workflow 裡設定：
+   ```yaml
+   - name: Install
+     working-directory: ithome_bot
+     run: |
+       pip install -e .
+       playwright install webkit
+
+   - name: Post article
+     env:
+       ITHOME_COOKIES: ${{ secrets.ITHOME_COOKIES }}
+       ITHOME_HEADLESS: "true"
+     run: python3 your_script.py
+   ```
+
+`Client.load_cookies()` 在 `cookies.txt` 不存在時會自動用 `ITHOME_COOKIES`
+的內容寫出檔案；CLI 讀 `ITHOME_HEADLESS=true` 就會用 headless 模式啟動。
+
+**cookies 續期**：每次執行時，`Client.login()` 會先嘗試靜默續期
+session——如果 member.ithome.com.tw 上的「記住我」cookie（效期通常有
+一年左右）還有效，網站會直接核發新的 session，不需要帳密、也不會跳
+reCAPTCHA。續期後記得呼叫 `save_cookies()`，並視需要把新內容寫回
+`ITHOME_COOKIES` Secret（例如用 `gh secret set` 搭配一個有
+`Secrets: Read and write` 權限的 fine-grained PAT），這樣 CI 才能持續
+運作，不用每隔一段時間回來手動重新登入一次。
+
 ### 複製到其他專案
 
 如果不想安裝 package，可以直接複製以下檔案到你的專案：

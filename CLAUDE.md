@@ -17,15 +17,21 @@
 ithome_bot/
 ├── client.py           # 主要客戶端控制器
 ├── authenticator.py    # 認證功能模組
+├── article_base.py     # 文章操作共用邏輯（標題/內容/tag/提交）
+├── article_creator.py  # 文章建立功能
 ├── article_updater.py  # 文章更新功能
-├── recaptcha.py       # reCAPTCHA 處理器
-└── cli.py             # CLI 介面
+├── article.py          # Article 值物件
+├── markdown_parser.py  # 把標準格式 markdown 解析成 Article
+├── recaptcha.py         # reCAPTCHA 處理器
+└── cli.py               # CLI 介面
 ```
 
 ### 類別設計
-- **Client**: 主控制器，協調各模組運作
+- **Client**: 主控制器，協調各模組運作；`create_article`/`update_article` 接受 dict 或 `Article` 物件
 - **Authenticator**: 處理登入流程與使用者認證
-- **ArticleUpdater**: 文章更新邏輯
+- **ArticleCreator**/**ArticleUpdater**: 文章建立/更新邏輯，共用 `ArticleBase`
+- **Article**: 標準值物件（subject/description/tags/category_id/article_id/draft/date/permalink/author），任何 parser 的標準輸出
+- **markdown_parser**: 把標準格式的 markdown（frontmatter 裡的 title/tags/draft + 內文）解析成 `Article`；`update_frontmatter()` 反過來把 date/permalink/author 這類發表後 metadata 寫回檔案
 - **ReCaptcha**: reCAPTCHA 偵測與處理
 
 ## 專案結構
