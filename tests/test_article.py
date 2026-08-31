@@ -34,6 +34,36 @@ async def test_create_article(client):
 
 
 @pytest.mark.asyncio
+async def test_update_article_with_tags(client):
+    """測試更新文章時可以附加自訂 tag，且不影響原有的鐵人賽自動 tag"""
+
+    description_file = Path(__file__).parent / "fixtures/day01-python-environment-setup.md"
+    with open(description_file, 'r', encoding='utf-8') as f:
+        description = f.read()
+
+    unique_tag = f"pytest-tag-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    article_data = {
+        "article_id": "10406474",
+        "subject": "Day 01：AI 重構 legacy 系統的真正難點在哪裡",
+        "description": description,
+        "tags": ["PHP", unique_tag],
+    }
+
+    # Act
+    result = await client.update_article(article_data)
+
+    # Assert - 更新成功，且文章頁面上看得到剛加上去的 tag
+    assert result == "10406474"
+
+    # 網站會把 tag 統一轉成小寫存
+    tag_links = await client.page.locator("a.qa-header__tagList").all_text_contents()
+    assert "php" in tag_links
+    assert unique_tag in tag_links
+    # 鐵人賽自動 tag 不該被我們動到
+    assert "18th鐵人賽" in tag_links
+
+
+@pytest.mark.asyncio
 async def test_update_article(client):
     """測試更新文章"""
 

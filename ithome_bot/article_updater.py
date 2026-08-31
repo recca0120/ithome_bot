@@ -31,6 +31,7 @@ class ArticleUpdater(ArticleBase):
                 - article_id: 文章 ID
                 - subject: 文章標題
                 - description: 文章內容
+                - tags: 選填，要另外加上的自訂 tag 清單（不會清掉既有 tag）
 
         Returns:
             str | None: 成功時回傳 article_id，失敗時回傳 None
@@ -39,10 +40,11 @@ class ArticleUpdater(ArticleBase):
         article_id = article_data['article_id']
         subject = article_data['subject']
         description = article_data['description']
-        
+        tags = article_data.get('tags', [])
+
         # 儲存當前文章 ID
         self._current_article_id = article_id
-        
+
         # 導航到編輯頁面
         await self._navigate_to_edit_page(article_id)
 
@@ -52,6 +54,7 @@ class ArticleUpdater(ArticleBase):
         # 更新標題和內容（使用基類方法）
         await self._set_subject(subject, clear_first=True)
         await self._set_description(description, clear_first=True)
+        await self._set_tags(tags)
 
         # 提交更新
         return await self._submit()
