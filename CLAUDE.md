@@ -173,6 +173,8 @@ asyncio.run(update_my_article())
 - 使用 Base64 編碼儲存 cookies
 - 自動載入與儲存機制
 - 減少重複登入需求
+- `cookies.txt` 不存在時，`load_cookies()` 會改讀 `ITHOME_COOKIES` 環境
+  變數（內容跟檔案內容一樣）並寫成檔案，適合 CI 把 cookies 存成 Secret
 
 ### reCAPTCHA 處理
 - 自動偵測 reCAPTCHA 存在
@@ -245,7 +247,7 @@ pytest -v -s
 - 自動處理 reCAPTCHA
 
 ## 注意事項
-1. **瀏覽器模式**: 固定使用顯示模式（headless=False）以便處理 reCAPTCHA
+1. **瀏覽器模式**: CLI 預設顯示模式（headless=False）以便處理 reCAPTCHA，可用 `ITHOME_HEADLESS=true` 切成 headless（適合搭配已經有效的 cookies，例如 CI；headless 模式沒辦法手動處理 reCAPTCHA）
 2. **帳號安全**: 不要將 .env 檔案提交到版本控制
 3. **文章權限**: 只能更新自己帳號的文章
 4. **請求頻率**: 避免過於頻繁的操作以防被偵測為機器人

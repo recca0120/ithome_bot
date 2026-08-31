@@ -96,6 +96,11 @@ class ArticleBase(ABC):
             }
         """, content)
 
+    MAX_TAGS = 5
+    """iThome 文章 tag 欄位實測出來的上限（含自動掛的系列 tag，例如
+    「18th鐵人賽」）。超過這個數字表單會靜默失敗——不跳錯誤、不導頁，
+    create/update 會直接回傳 None，很容易被誤判成其他原因失敗。"""
+
     async def _set_tags(self, tags: list[str]) -> None:
         """
         新增自訂 tag（共用方法）
@@ -111,17 +116,44 @@ class ArticleBase(ABC):
         「這個 tag 有沒有真的被選到」的競態問題。既有的 tag（例如鐵人賽
         自動掛的「18th鐵人賽」）不會被清掉，這裡只會新增，不會清空重來。
 
+        比對是否已存在時忽略大小寫——網站會把 tag 統一存成小寫，用原本大小寫
+        重複新增同一個字（例如 "PHP" vs 既有的 "php"）會被當成兩個不同的
+        tag，疊出一堆看起來一樣、實際是重複的項目，很容易就撞到上面的數量
+        上限。
+
         Args:
             tags: 要加入的 tag 清單
+
+        Raises:
+            ValueError: 加完之後總數會超過 MAX_TAGS，直接擋下來，
+                不要送出一個注定會被網站靜默拒絕的表單
         """
         if not tags:
             return
+
+        current_count, would_exceed = await self.page.evaluate(
+            """(tags) => {
+                const select = document.querySelector('#tags');
+                const existing = Array.from(select.options).map(o => o.value.toLowerCase());
+                const newOnes = tags.filter(t => !existing.includes(t.toLowerCase()));
+                return [select.options.length, select.options.length + newOnes.length];
+            }""",
+            tags,
+        )
+        if would_exceed > self.MAX_TAGS:
+            raise ValueError(
+                f"加上這些 tag 後總數會是 {would_exceed}，超過網站上限 "
+                f"{self.MAX_TAGS} 個（目前已有 {current_count} 個）。"
+                f"表單會靜默失敗，所以先擋下來，不送出。"
+            )
 
         await self.page.evaluate(
             """(tags) => {
                 const select = document.querySelector('#tags');
                 for (const tag of tags) {
-                    let opt = Array.from(select.options).find(o => o.value === tag);
+                    let opt = Array.from(select.options).find(
+                        o => o.value.toLowerCase() === tag.toLowerCase()
+                    );
                     if (!opt) {
                         opt = new Option(tag, tag, true, true);
                         select.add(opt);

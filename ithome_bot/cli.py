@@ -53,15 +53,18 @@ async def update_article_with_bot(
         account = os.getenv('ITHOME_ACCOUNT')
     if not password:
         password = os.getenv('ITHOME_PASSWORD')
-    
+    # ITHOME_HEADLESS=true 可以切成 headless 模式（例如 CI），但這樣沒辦法
+    # 手動處理 reCAPTCHA，只適合搭配已經有效的 cookies 使用
+    headless = os.getenv('ITHOME_HEADLESS', 'false').lower() == 'true'
+
     if not account or not password:
         click.echo("❌ 錯誤: 請提供帳號密碼或設定環境變數 ITHOME_ACCOUNT 和 ITHOME_PASSWORD")
         return False
-    
+
     # 啟動瀏覽器和執行更新
     click.echo("🚀 正在初始化瀏覽器...")
     playwright = await async_playwright().start()
-    browser = await playwright.webkit.launch(headless=False)
+    browser = await playwright.webkit.launch(headless=headless)
     page = await browser.new_page()
     
     try:

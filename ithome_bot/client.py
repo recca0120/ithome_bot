@@ -4,6 +4,7 @@ iThome 鐵人賽登入自動化
 """
 import base64
 import json
+import os
 from pathlib import Path
 
 from playwright.async_api import Page
@@ -103,12 +104,22 @@ class Client:
         """
         從檔案載入 cookies（Base64 編碼格式）
 
+        檔案不存在時，會嘗試從環境變數 ITHOME_COOKIES 讀取（內容跟
+        cookies.txt 檔案內容一樣，即 save_cookies() 存出來的 base64
+        字串），存成檔案後再載入。CI 環境常見用法：把 cookies.txt 的
+        內容設成 Secret，跑的時候不需要先手動產生這個檔案。
+
         Returns:
             bool: 是否成功載入 cookies
         """
         if not self.cookies_file.exists():
-            # 找不到 cookies 檔案
-            return False
+            env_cookies = os.getenv('ITHOME_COOKIES')
+            if not env_cookies:
+                # 找不到 cookies 檔案，也沒有 ITHOME_COOKIES 環境變數
+                return False
+            self.cookies_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.cookies_file, 'w', encoding='utf-8') as f:
+                f.write(env_cookies)
 
         try:
             with open(self.cookies_file, 'r', encoding='utf-8') as f:
