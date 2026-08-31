@@ -32,6 +32,7 @@ class ArticleCreator(ArticleBase):
                 - category_id: 系列 ID（例如 "8446" 對應 Python pytest TDD 系列）
                 - subject: 文章標題
                 - description: 文章內容
+                - tags: 選填，要另外加上的自訂 tag 清單
 
         Returns:
             str | None: 成功時回傳 article_id，失敗時回傳 None
@@ -40,7 +41,8 @@ class ArticleCreator(ArticleBase):
         category_id = article_data['category_id']
         subject = article_data['subject']
         description = article_data['description']
-        
+        tags = article_data.get('tags', [])
+
         # 導航到建立頁面
         await self._navigate_to_create_page(category_id)
 
@@ -50,6 +52,7 @@ class ArticleCreator(ArticleBase):
         # 設定標題和內容（使用基類方法）
         await self._set_subject(subject)
         await self._set_description(description)
+        await self._set_tags(tags)
 
         # 提交文章
         return await self._submit()
@@ -74,7 +77,7 @@ class ArticleCreator(ArticleBase):
     
     async def _select_series_from_modal(self, category_id: str) -> None:
         """從 modal 中選擇指定系列"""
-        series_link = self.page.locator(f'a[href*="/2025ironman/create/{category_id}"]')
+        series_link = self.page.locator(f'a[href*="/2026ironman/create/{category_id}"]')
         await series_link.wait_for(state="visible", timeout=5000)
         await series_link.click()
 

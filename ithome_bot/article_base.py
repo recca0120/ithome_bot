@@ -96,6 +96,45 @@ class ArticleBase(ABC):
             }
         """, content)
 
+    async def _set_tags(self, tags: list[str]) -> None:
+        """
+        新增自訂 tag（共用方法）
+
+        Tag 欄位是 select2（多選、允許輸入新值）。原本嘗試用模擬打字 +
+        Enter 操作 UI，但這個 select2 的「新增 tag 變成已選取」是延遲觸發的
+        （要等下一次 Enter 或其他互動才會把 selected 標成 true），連續新增
+        兩個 tag 時常常漏掉，時序不穩定、不能單靠加長等待時間解決。
+
+        改成直接操作底層的 <select multiple id="tags">：手動 new Option()
+        加進去（若已存在就直接標 selected），再用 jQuery 觸發 change 事件讓
+        select2 重繪。這樣不管加幾個 tag 都是同一個 tick 內完成，不會有
+        「這個 tag 有沒有真的被選到」的競態問題。既有的 tag（例如鐵人賽
+        自動掛的「18th鐵人賽」）不會被清掉，這裡只會新增，不會清空重來。
+
+        Args:
+            tags: 要加入的 tag 清單
+        """
+        if not tags:
+            return
+
+        await self.page.evaluate(
+            """(tags) => {
+                const select = document.querySelector('#tags');
+                for (const tag of tags) {
+                    let opt = Array.from(select.options).find(o => o.value === tag);
+                    if (!opt) {
+                        opt = new Option(tag, tag, true, true);
+                        select.add(opt);
+                    } else {
+                        opt.selected = true;
+                    }
+                }
+                $(select).trigger('change');
+            }""",
+            tags,
+        )
+        await self.page.wait_for_timeout(300)
+
     async def _handle_recaptcha(self) -> bool:
         """
         處理 reCAPTCHA（共用方法）
